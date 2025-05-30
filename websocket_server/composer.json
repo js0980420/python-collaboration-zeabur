@@ -1,0 +1,26 @@
+{
+    "name": "python-collaborate/websocket-server",
+    "description": "PHP多人協作WebSocket服務器 - 基於Ratchet",
+    "type": "project",
+    "require": {
+        "php": "^7.4|^8.0",
+        "cboden/ratchet": "^0.4.4",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-json": "*",
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PythonCollaborate\\": "src/"
+        }
+    },
+    "scripts": {
+        "start": "php websocket_server.php",
+        "test": "php -l websocket_server.php"
+    },
+    "config": {
+        "optimize-autoloader": true
+    },
+    "minimum-stability": "stable"
+} 

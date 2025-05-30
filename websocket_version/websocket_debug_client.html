@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket 診斷工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; height: 400px; overflow-y: scroll; border: 1px solid #ddd; }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+        button { margin: 5px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 WebSocket 診斷工具</h1>
+    
+    <div>
+        <button id="connectBtn">連接 WebSocket</button>
+        <button id="joinRoomBtn">加入房間</button>
+        <button id="pingBtn">發送 Ping</button>
+        <button id="clearBtn">清除日誌</button>
+        <button id="disconnectBtn">斷開連接</button>
+    </div>
+    
+    <h3>連接狀態: <span id="status">未連接</span></h3>
+    <h3>詳細日誌:</h3>
+    <div id="log" class="log"></div>
+
+    <script>
+        let ws = null;
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${time}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateStatus(text, color) {
+            status.textContent = text;
+            status.style.color = color;
+        }
+
+        document.getElementById('connectBtn').onclick = function() {
+            if (ws && ws.readyState !== WebSocket.CLOSED) {
+                addLog('WebSocket 已經連接', 'error');
+                return;
+            }
+
+            addLog('嘗試連接到 ws://localhost:8080...', 'info');
+            updateStatus('連接中...', 'orange');
+
+            try {
+                ws = new WebSocket('ws://localhost:8080');
+
+                ws.onopen = function(event) {
+                    addLog('✅ WebSocket 連接成功', 'success');
+                    updateStatus('已連接', 'green');
+                };
+
+                ws.onmessage = function(event) {
+                    addLog('📨 收到消息: ' + event.data, 'info');
+                    
+                    try {
+                        const data = JSON.parse(event.data);
+                        addLog('  -> 類型: ' + data.type, 'info');
+                        if (data.type === 'error') {
+                            addLog('  -> 錯誤: ' + data.message, 'error');
+                        }
+                    } catch (e) {
+                        addLog('  -> 無法解析JSON: ' + e.message, 'error');
+                    }
+                };
+
+                ws.onclose = function(event) {
+                    addLog(`❌ 連接關閉 - 代碼: ${event.code}, 原因: ${event.reason || '未知'}`, 'error');
+                    updateStatus('已斷開', 'red');
+                    
+                    // 詳細的關閉代碼說明
+                    let codeDescription = '';
+                    switch(event.code) {
+                        case 1000: codeDescription = '正常關閉'; break;
+                        case 1001: codeDescription = '端點離開'; break;
+                        case 1002: codeDescription = '協議錯誤'; break;
+                        case 1003: codeDescription = '數據類型錯誤'; break;
+                        case 1006: codeDescription = '異常關閉 (可能是服務器崩潰)'; break;
+                        case 1007: codeDescription = '數據格式錯誤'; break;
+                        case 1008: codeDescription = '違反政策'; break;
+                        case 1009: codeDescription = '消息過大'; break;
+                        case 1010: codeDescription = '擴展協商失敗'; break;
+                        case 1011: codeDescription = '服務器遇到意外錯誤'; break;
+                        default: codeDescription = '未知錯誤代碼';
+                    }
+                    addLog(`  -> 關閉代碼說明: ${codeDescription}`, 'error');
+                };
+
+                ws.onerror = function(error) {
+                    addLog('❌ WebSocket 錯誤: ' + error, 'error');
+                    updateStatus('錯誤', 'red');
+                };
+
+            } catch (e) {
+                addLog('❌ 創建 WebSocket 失敗: ' + e.message, 'error');
+                updateStatus('創建失敗', 'red');
+            }
+        };
+
+        document.getElementById('joinRoomBtn').onclick = function() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('請先連接 WebSocket', 'error');
+                return;
+            }
+
+            const message = {
+                action: 'join_room',
+                room: 'test_room',
+                user_id: 'debug_user_' + Math.random().toString(36).substr(2, 9),
+                user_name: '調試用戶'
+            };
+
+            addLog('發送加入房間請求: ' + JSON.stringify(message), 'info');
+            ws.send(JSON.stringify(message));
+        };
+
+        document.getElementById('pingBtn').onclick = function() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                addLog('請先連接 WebSocket', 'error');
+                return;
+            }
+
+            const message = {
+                action: 'ping',
+                timestamp: Date.now()
+            };
+
+            addLog('發送 Ping: ' + JSON.stringify(message), 'info');
+            ws.send(JSON.stringify(message));
+        };
+
+        document.getElementById('clearBtn').onclick = function() {
+            log.innerHTML = '';
+        };
+
+        document.getElementById('disconnectBtn').onclick = function() {
+            if (ws) {
+                addLog('主動斷開連接', 'info');
+                ws.close(1000, '用戶主動斷開');
+            }
+        };
+
+        // 頁面卸載時關閉連接
+        window.addEventListener('beforeunload', function() {
+            if (ws) {
+                ws.close();
+            }
+        });
+    </script>
+</body>
+</html> 

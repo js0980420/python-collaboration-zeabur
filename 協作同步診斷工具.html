@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 協作同步診斷工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 2.5em;
+        }
+        
+        .diagnostic-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        
+        .problem-found {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .solution-found {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .test-pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .test-fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .test-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #333;
+        }
+        
+        .network-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #28a745;
+        }
+        
+        .status-offline {
+            background: #dc3545;
+        }
+        
+        .status-warning {
+            background: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 協作同步診斷工具</h1>
+            <p>檢測為什麼兩端設備無法同步協作</p>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>📊 當前環境檢測</h3>
+            <div class="network-info">
+                <div class="info-card">
+                    <h4>🌐 網路信息</h4>
+                    <p>IP 地址: <span id="client-ip">檢測中...</span></p>
+                    <p>用戶代理: <span id="user-agent">檢測中...</span></p>
+                </div>
+                <div class="info-card">
+                    <h4>🔧 瀏覽器支援</h4>
+                    <p>BroadcastChannel: <span id="broadcast-support">檢測中...</span></p>
+                    <p>WebSocket: <span id="websocket-support">檢測中...</span></p>
+                </div>
+                <div class="info-card">
+                    <h4>📡 連接狀態</h4>
+                    <p>XAMPP 狀態: <span id="xampp-status">檢測中...</span></p>
+                    <p>PHP 後端: <span id="php-status">檢測中...</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="diagnostic-section problem-found" id="main-problem">
+            <h3>❌ 發現主要問題</h3>
+            <div class="test-result test-fail">
+                <strong>BroadcastChannel API 限制</strong><br>
+                您目前使用的協作系統基於 BroadcastChannel API，這個技術只能在<span class="highlight">同一瀏覽器的不同標籤頁</span>之間同步，無法在不同設備之間進行同步。
+            </div>
+            
+            <h4>🔍 技術原理說明：</h4>
+            <div class="code-block">
+// 當前使用的同步機制
+collaborationChannel = new BroadcastChannel('dual_collab_v2_' + currentRoom);
+
+// 這只能在同一瀏覽器內的標籤頁間通信
+// 桌電瀏覽器 ❌ 無法與 ➡️ 筆電瀏覽器 通信
+            </div>
+        </div>
+
+        <div class="diagnostic-section solution-found">
+            <h3>✅ 解決方案</h3>
+            <p>要實現真正的跨設備協作，需要使用以下技術之一：</p>
+            
+            <div class="test-result test-pass">
+                <strong>方案 1: WebSocket 服務器</strong><br>
+                使用 Node.js + Socket.io 或 PHP + Ratchet 建立 WebSocket 服務器
+            </div>
+            
+            <div class="test-result test-pass">
+                <strong>方案 2: HTTP 輪詢</strong><br>
+                使用 PHP + MySQL 定期檢查數據庫變更
+            </div>
+            
+            <div class="test-result test-pass">
+                <strong>方案 3: Server-Sent Events (SSE)</strong><br>
+                使用 PHP 推送實時更新到客戶端
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>🧪 測試當前同步機制</h3>
+            <p>在<strong>同一台設備</strong>上測試 BroadcastChannel：</p>
+            
+            <button class="btn" onclick="testBroadcastChannel()">測試 BroadcastChannel</button>
+            <button class="btn" onclick="openNewTab()">開啟新標籤頁測試</button>
+            
+            <div id="broadcast-test-result"></div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>🔧 快速修復建議</h3>
+            
+            <h4>立即可用的解決方案：</h4>
+            <div class="test-result test-warning">
+                <strong>臨時方案：HTTP 輪詢同步</strong><br>
+                修改現有代碼，使用 PHP + MySQL 實現跨設備同步
+            </div>
+            
+            <button class="btn btn-success" onclick="generateHttpPollingCode()">生成 HTTP 輪詢代碼</button>
+            <button class="btn btn-success" onclick="generateWebSocketCode()">生成 WebSocket 代碼</button>
+            
+            <div id="generated-code"></div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>📋 檢查清單</h3>
+            <div id="checklist">
+                <div class="test-result test-fail">
+                    <span class="status-indicator status-offline"></span>
+                    <strong>跨設備同步：</strong> 需要服務器端解決方案
+                </div>
+                <div class="test-result test-pass">
+                    <span class="status-indicator status-online"></span>
+                    <strong>XAMPP 環境：</strong> 正常運行
+                </div>
+                <div class="test-result test-pass">
+                    <span class="status-indicator status-online"></span>
+                    <strong>數據庫連接：</strong> 已初始化
+                </div>
+                <div class="test-result test-warning">
+                    <span class="status-indicator status-warning"></span>
+                    <strong>同步機制：</strong> 需要升級
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢測環境信息
+        document.addEventListener('DOMContentLoaded', function() {
+            detectEnvironment();
+            checkXAMPPStatus();
+        });
+
+        function detectEnvironment() {
+            // 檢測 IP 地址
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('client-ip').textContent = data.ip;
+                })
+                .catch(() => {
+                    document.getElementById('client-ip').textContent = '無法檢測';
+                });
+
+            // 檢測用戶代理
+            document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+
+            // 檢測 BroadcastChannel 支援
+            const broadcastSupport = 'BroadcastChannel' in window;
+            document.getElementById('broadcast-support').innerHTML = 
+                broadcastSupport ? 
+                '<span class="status-indicator status-online"></span>支援' : 
+                '<span class="status-indicator status-offline"></span>不支援';
+
+            // 檢測 WebSocket 支援
+            const websocketSupport = 'WebSocket' in window;
+            document.getElementById('websocket-support').innerHTML = 
+                websocketSupport ? 
+                '<span class="status-indicator status-online"></span>支援' : 
+                '<span class="status-indicator status-offline"></span>不支援';
+        }
+
+        async function checkXAMPPStatus() {
+            try {
+                const response = await fetch('http://localhost/collaboration/network_test.php');
+                const data = await response.json();
+                
+                document.getElementById('xampp-status').innerHTML = 
+                    '<span class="status-indicator status-online"></span>運行中';
+                document.getElementById('php-status').innerHTML = 
+                    '<span class="status-indicator status-online"></span>正常';
+                    
+            } catch (error) {
+                document.getElementById('xampp-status').innerHTML = 
+                    '<span class="status-indicator status-offline"></span>離線';
+                document.getElementById('php-status').innerHTML = 
+                    '<span class="status-indicator status-offline"></span>無法連接';
+            }
+        }
+
+        function testBroadcastChannel() {
+            const channel = new BroadcastChannel('diagnostic_test');
+            const resultDiv = document.getElementById('broadcast-test-result');
+            
+            let messageReceived = false;
+            
+            channel.onmessage = function(event) {
+                messageReceived = true;
+                resultDiv.innerHTML = `
+                    <div class="test-result test-pass">
+                        ✅ BroadcastChannel 在同一瀏覽器內正常工作<br>
+                        收到消息: ${event.data.message}
+                    </div>
+                `;
+            };
+            
+            // 發送測試消息
+            channel.postMessage({
+                message: '測試消息',
+                timestamp: Date.now()
+            });
+            
+            // 檢查是否收到消息
+            setTimeout(() => {
+                if (!messageReceived) {
+                    resultDiv.innerHTML = `
+                        <div class="test-result test-fail">
+                            ❌ BroadcastChannel 測試失敗
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+
+        function openNewTab() {
+            const newTab = window.open(window.location.href, '_blank');
+            if (newTab) {
+                alert('✅ 已開啟新標籤頁\n\n請在新標籤頁中點擊「測試 BroadcastChannel」按鈕，\n然後回到這個標籤頁查看是否能收到消息。\n\n這證明了 BroadcastChannel 只能在同一瀏覽器的標籤頁間工作。');
+            } else {
+                alert('❌ 無法開啟新標籤頁，請手動複製網址到新標籤頁');
+            }
+        }
+
+        function generateHttpPollingCode() {
+            const codeDiv = document.getElementById('generated-code');
+            codeDiv.innerHTML = `
+                <h4>🔧 HTTP 輪詢同步代碼</h4>
+                <div class="code-block">
+// 替換 BroadcastChannel 的 HTTP 輪詢方案
+class HttpPollingSync {
+    constructor(roomId, userId) {
+        this.roomId = roomId;
+        this.userId = userId;
+        this.lastVersion = 0;
+        this.pollInterval = 1000; // 1秒輪詢一次
+        this.startPolling();
+    }
+    
+    async startPolling() {
+        setInterval(async () => {
+            try {
+                const response = await fetch('sync_api.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'get_updates',
+                        room: this.roomId,
+                        lastVersion: this.lastVersion
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.updates && data.updates.length > 0) {
+                    this.handleUpdates(data.updates);
+                    this.lastVersion = data.latestVersion;
+                }
+            } catch (error) {
+                console.error('同步失敗:', error);
+            }
+        }, this.pollInterval);
+    }
+    
+    async sendUpdate(type, data) {
+        try {
+            await fetch('sync_api.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action: 'send_update',
+                    room: this.roomId,
+                    userId: this.userId,
+                    type: type,
+                    data: data
+                })
+            });
+        } catch (error) {
+            console.error('發送更新失敗:', error);
+        }
+    }
+}
+                </div>
+                <p><strong>優點：</strong> 簡單易實現，使用現有 PHP 後端</p>
+                <p><strong>缺點：</strong> 延遲較高（1-2秒），服務器負載較大</p>
+            `;
+        }
+
+        function generateWebSocketCode() {
+            const codeDiv = document.getElementById('generated-code');
+            codeDiv.innerHTML = `
+                <h4>🚀 WebSocket 即時同步代碼</h4>
+                <div class="code-block">
+// WebSocket 即時同步方案
+class WebSocketSync {
+    constructor(roomId, userId) {
+        this.roomId = roomId;
+        this.userId = userId;
+        this.connect();
+    }
+    
+    connect() {
+        this.ws = new WebSocket('ws://localhost:8080');
+        
+        this.ws.onopen = () => {
+            console.log('WebSocket 連接成功');
+            this.joinRoom();
+        };
+        
+        this.ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleMessage(data);
+        };
+        
+        this.ws.onclose = () => {
+            console.log('WebSocket 連接關閉，嘗試重連...');
+            setTimeout(() => this.connect(), 3000);
+        };
+    }
+    
+    joinRoom() {
+        this.send({
+            type: 'join_room',
+            roomId: this.roomId,
+            userId: this.userId
+        });
+    }
+    
+    send(data) {
+        if (this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(data));
+        }
+    }
+    
+    sendCodeChange(code) {
+        this.send({
+            type: 'code_change',
+            roomId: this.roomId,
+            userId: this.userId,
+            code: code,
+            timestamp: Date.now()
+        });
+    }
+}
+                </div>
+                <p><strong>優點：</strong> 真正即時同步（<50ms），低延遲</p>
+                <p><strong>缺點：</strong> 需要額外的 WebSocket 服務器</p>
+            `;
+        }
+    </script>
+</body>
+</html> 

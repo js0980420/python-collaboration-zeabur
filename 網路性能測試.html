@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網路性能測試 - 筆電端診斷</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .result {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #4caf50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .metric {
+            display: inline-block;
+            margin: 10px 20px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 網路性能測試 - 筆電端診斷</h1>
+        
+        <div class="test-box">
+            <h2>📊 當前網路狀態</h2>
+            <div class="metric">
+                <div class="metric-value" id="connectionType">檢測中...</div>
+                <div class="metric-label">連接類型</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="downlink">檢測中...</div>
+                <div class="metric-label">估計頻寬 (Mbps)</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="rtt">檢測中...</div>
+                <div class="metric-label">往返延遲 (ms)</div>
+            </div>
+        </div>
+
+        <div class="test-box">
+            <h2>🚀 延遲測試</h2>
+            <button onclick="startLatencyTest()">開始延遲測試</button>
+            <div class="progress">
+                <div class="progress-bar" id="latencyProgress"></div>
+            </div>
+            <div id="latencyResults"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>📡 協作服務器連接測試</h2>
+            <button onclick="startServerTest()">測試服務器響應</button>
+            <div id="serverResults"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>🔄 同步性能測試</h2>
+            <button onclick="startSyncTest()">測試同步延遲</button>
+            <div id="syncResults"></div>
+        </div>
+
+        <div class="test-box">
+            <h2>💡 優化建議</h2>
+            <div id="recommendations"></div>
+        </div>
+    </div>
+
+    <script>
+        // 檢測網路連接信息
+        function detectNetworkInfo() {
+            if ('connection' in navigator) {
+                const connection = navigator.connection;
+                document.getElementById('connectionType').textContent = 
+                    connection.effectiveType || '未知';
+                document.getElementById('downlink').textContent = 
+                    connection.downlink ? connection.downlink.toFixed(1) : '未知';
+                document.getElementById('rtt').textContent = 
+                    connection.rtt || '未知';
+            } else {
+                document.getElementById('connectionType').textContent = '不支援檢測';
+                document.getElementById('downlink').textContent = '不支援檢測';
+                document.getElementById('rtt').textContent = '不支援檢測';
+            }
+        }
+
+        // 延遲測試
+        async function startLatencyTest() {
+            const results = document.getElementById('latencyResults');
+            const progress = document.getElementById('latencyProgress');
+            results.innerHTML = '<p>正在測試延遲...</p>';
+            
+            const testCount = 10;
+            const latencies = [];
+            
+            for (let i = 0; i < testCount; i++) {
+                const start = performance.now();
+                
+                try {
+                    await fetch(`http://192.168.31.32/collaboration/network_test.php?t=${Date.now()}`, {
+                        method: 'GET',
+                        cache: 'no-cache'
+                    });
+                    const end = performance.now();
+                    const latency = end - start;
+                    latencies.push(latency);
+                } catch (error) {
+                    latencies.push(5000); // 超時視為 5 秒
+                }
+                
+                progress.style.width = `${((i + 1) / testCount) * 100}%`;
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+            const minLatency = Math.min(...latencies);
+            const maxLatency = Math.max(...latencies);
+            
+            let resultClass = 'result';
+            let status = '良好';
+            if (avgLatency > 1000) {
+                resultClass = 'error';
+                status = '較差';
+            } else if (avgLatency > 500) {
+                resultClass = 'warning';
+                status = '一般';
+            }
+            
+            results.innerHTML = `
+                <div class="${resultClass}">
+                    <h3>延遲測試結果 - ${status}</h3>
+                    <p><strong>平均延遲:</strong> ${avgLatency.toFixed(0)}ms</p>
+                    <p><strong>最小延遲:</strong> ${minLatency.toFixed(0)}ms</p>
+                    <p><strong>最大延遲:</strong> ${maxLatency.toFixed(0)}ms</p>
+                    <p><strong>測試次數:</strong> ${testCount}</p>
+                </div>
+            `;
+        }
+
+        // 服務器連接測試
+        async function startServerTest() {
+            const results = document.getElementById('serverResults');
+            results.innerHTML = '<p>正在測試服務器連接...</p>';
+            
+            const tests = [
+                { name: '主頁面', url: 'http://192.168.31.32/collaboration/' },
+                { name: '數據庫初始化', url: 'http://192.168.31.32/collaboration/init_db.php' },
+                { name: '代碼同步API', url: 'http://192.168.31.32/collaboration/code_sync_handler.php' },
+                { name: '聊天API', url: 'http://192.168.31.32/collaboration/chat_api_handler.php' }
+            ];
+            
+            let resultHtml = '<h3>服務器連接測試結果</h3>';
+            
+            for (const test of tests) {
+                const start = performance.now();
+                try {
+                    const response = await fetch(test.url, {
+                        method: 'HEAD',
+                        cache: 'no-cache'
+                    });
+                    const end = performance.now();
+                    const time = end - start;
+                    
+                    const status = response.ok ? '✅' : '❌';
+                    const statusText = response.ok ? '正常' : `錯誤 ${response.status}`;
+                    
+                    resultHtml += `
+                        <p>${status} <strong>${test.name}:</strong> ${statusText} (${time.toFixed(0)}ms)</p>
+                    `;
+                } catch (error) {
+                    resultHtml += `
+                        <p>❌ <strong>${test.name}:</strong> 連接失敗 - ${error.message}</p>
+                    `;
+                }
+            }
+            
+            results.innerHTML = `<div class="result">${resultHtml}</div>`;
+        }
+
+        // 同步性能測試
+        async function startSyncTest() {
+            const results = document.getElementById('syncResults');
+            results.innerHTML = '<p>正在測試同步性能...</p>';
+            
+            // 模擬協作同步請求
+            const syncTimes = [];
+            const testCount = 5;
+            
+            for (let i = 0; i < testCount; i++) {
+                const start = performance.now();
+                
+                try {
+                    const response = await fetch('http://192.168.31.32/collaboration/code_sync_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'test',
+                            content: `測試同步 ${i + 1}`,
+                            timestamp: Date.now()
+                        })
+                    });
+                    
+                    const end = performance.now();
+                    syncTimes.push(end - start);
+                } catch (error) {
+                    syncTimes.push(5000);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            const avgSync = syncTimes.reduce((a, b) => a + b, 0) / syncTimes.length;
+            
+            let syncStatus = '良好';
+            let syncClass = 'result';
+            if (avgSync > 2000) {
+                syncStatus = '較差';
+                syncClass = 'error';
+            } else if (avgSync > 1000) {
+                syncStatus = '一般';
+                syncClass = 'warning';
+            }
+            
+            results.innerHTML = `
+                <div class="${syncClass}">
+                    <h3>同步性能測試結果 - ${syncStatus}</h3>
+                    <p><strong>平均同步時間:</strong> ${avgSync.toFixed(0)}ms</p>
+                    <p><strong>建議:</strong> ${avgSync < 1000 ? '同步性能良好，適合協作' : '同步較慢，建議優化網路環境'}</p>
+                </div>
+            `;
+            
+            generateRecommendations(avgSync);
+        }
+
+        // 生成優化建議
+        function generateRecommendations(syncTime) {
+            const recommendations = document.getElementById('recommendations');
+            let advice = [];
+            
+            if (syncTime > 2000) {
+                advice.push('🔴 <strong>嚴重延遲</strong> - 建議切換到更穩定的網路環境');
+                advice.push('📶 檢查手機信號強度，移動到信號較好的位置');
+                advice.push('📱 如果可能，切換到 5G 網路或 WiFi');
+                advice.push('🔄 關閉其他佔用網路的應用程式');
+            } else if (syncTime > 1000) {
+                advice.push('🟡 <strong>中等延遲</strong> - 可以使用但體驗可能不夠流暢');
+                advice.push('📶 嘗試移動到信號較好的位置');
+                advice.push('⏱️ 避免同時進行大量網路活動');
+            } else {
+                advice.push('🟢 <strong>延遲良好</strong> - 適合進行協作編程');
+                advice.push('✨ 當前網路環境適合協作測試');
+            }
+            
+            // 通用建議
+            advice.push('💡 <strong>通用優化建議:</strong>');
+            advice.push('• 確保手機電量充足');
+            advice.push('• 避免在網路高峰時段測試');
+            advice.push('• 關閉不必要的背景應用');
+            advice.push('• 保持設備相對靜止');
+            
+            recommendations.innerHTML = advice.map(item => `<p>${item}</p>`).join('');
+        }
+
+        // 頁面載入時檢測網路信息
+        window.onload = function() {
+            detectNetworkInfo();
+            
+            // 每 5 秒更新一次網路信息
+            setInterval(detectNetworkInfo, 5000);
+        };
+    </script>
+</body>
+</html> 

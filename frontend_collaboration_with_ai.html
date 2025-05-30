@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Python協作教學平台 - 完整AI版本</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 0;
+            height: 650px;
+        }
+        
+        .editor-panel {
+            border-right: 2px solid #e0e0e0;
+        }
+        
+        .editor-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .CodeMirror {
+            height: 555px !important;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #e0e0e0;
+        }
+        
+        .ai-panel {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .users-section {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        
+        .users-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .user-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #fafafa;
+        }
+        
+        .ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f0f4ff;
+        }
+        
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .ai-message {
+            margin-bottom: 12px;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #9c27b0;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .message-user {
+            font-weight: 600;
+            color: #4facfe;
+            font-size: 13px;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .message-content {
+            color: #333;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+        
+        .ai-content {
+            color: #333;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        
+        .chat-input {
+            border-top: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            background: white;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .ai-controls {
+            border-top: 1px solid #e0e0e0;
+            padding: 15px;
+            background: white;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            outline: none;
+            font-size: 13px;
+        }
+        
+        .chat-input input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-ai {
+            background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #9c27b0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .demo-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Python協作教學平台</h1>
+            <div class="subtitle">多人協作 + AI助教 - 完整功能版本</div>
+        </div>
+        
+        <div class="demo-warning">
+            🤖 <strong>AI助教已啟用</strong>: 支援程式碼解釋、錯誤檢查、改進建議！開啟多個標籤頁體驗協作功能。
+        </div>
+        
+        <div class="main-content">
+            <!-- 程式碼編輯器 -->
+            <div class="editor-panel">
+                <div class="editor-header">
+                    <div class="editor-title">🐍 Python協作編輯器</div>
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>協作同步中</span>
+                        <span id="syncDelay">延遲: ~50ms</span>
+                    </div>
+                </div>
+                <textarea id="code-editor" placeholder="開始編寫您的Python程式碼..."></textarea>
+            </div>
+            
+            <!-- 聊天面板 -->
+            <div class="chat-panel">
+                <div class="users-section">
+                    <div class="users-title">👥 在線用戶 (<span id="user-count">1</span>)</div>
+                    <div class="user-list" id="user-list">
+                        <div class="user-badge">用戶1 (您)</div>
+                    </div>
+                </div>
+                
+                <div class="panel-header">💬 即時聊天</div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message">
+                        <div class="message-header">
+                            <span class="message-user">💡 系統提示</span>
+                            <span class="message-time">剛才</span>
+                        </div>
+                        <div class="message-content">歡迎使用協作平台！AI助教已就緒，隨時為您解答程式問題。</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="輸入訊息..." maxlength="200">
+                    <button class="btn btn-primary" onclick="sendMessage()">發送</button>
+                </div>
+            </div>
+            
+            <!-- AI助教面板 -->
+            <div class="ai-panel">
+                <div class="panel-header">🤖 AI助教</div>
+                
+                <div class="ai-messages" id="ai-messages">
+                    <div class="ai-message">
+                        <div class="message-header">
+                            <span class="message-user">🤖 AI助教</span>
+                            <span class="message-time">剛才</span>
+                        </div>
+                        <div class="ai-content">我是您的Python程式設計助教！我可以幫您：<br>
+                        📝 解釋程式碼<br>
+                        🐛 找出錯誤<br>
+                        💡 提供改進建議<br>
+                        🤝 協作指導<br><br>
+                        請隨時使用下方按鈕或直接在聊天中提問！</div>
+                    </div>
+                </div>
+                
+                <div class="ai-controls">
+                    <button class="btn btn-ai" onclick="askAI('explain')">📝 解釋程式碼</button>
+                    <button class="btn btn-ai" onclick="askAI('bugs')">🐛 檢查錯誤</button>
+                    <button class="btn btn-ai" onclick="askAI('improve')">💡 改進建議</button>
+                    <button class="btn btn-ai" onclick="askAI('help')">🤝 協作指導</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label><strong>房間:</strong></label>
+                <input type="text" id="room-name" value="demo-room" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <button class="btn btn-primary" onclick="joinRoom()">加入房間</button>
+            </div>
+            
+            <div class="control-group">
+                <button class="btn btn-success" onclick="simulateCollaboration()">模擬協作</button>
+                <button class="btn btn-success" onclick="exportCode()">導出代碼</button>
+                <button class="btn btn-success" onclick="clearCode()">清空代碼</button>
+            </div>
+            
+            <div class="control-group">
+                <label><strong>同步延遲:</strong></label>
+                <select id="sync-delay" onchange="updateSyncDelay()" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="50">50ms (極快)</option>
+                    <option value="200">200ms (快速)</option>
+                    <option value="500">500ms (正常)</option>
+                    <option value="1000">1000ms (慢速)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        let editor;
+        let currentRoom = 'demo-room';
+        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        let userName = '用戶' + Math.floor(Math.random() * 999 + 1);
+        let currentVersion = 0;
+        let syncDelay = 50;
+        let lastSyncTime = Date.now();
+        
+        // 請在此設置您的API密鑰，或通過後端環境變量配置
+        // 注意：在生產環境中應該使用環境變量，不要將API密鑰直接寫在前端代碼中
+        const OPENAI_API_KEY = 'YOUR_API_KEY_HERE'; // 請替換為您的實際API密鑰
+        
+        // BroadcastChannel用於多標籤頁通信
+        const channel = new BroadcastChannel('python_collab');
+        
+        // 初始化CodeMirror編輯器
+        function initEditor() {
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                lineWrapping: true,
+                extraKeys: {
+                    "Tab": function(cm) {
+                        cm.replaceSelection("    ", "end");
+                    }
+                }
+            });
+            
+            // 初始代碼
+            const initialCode = `# 🐍 Python協作教學平台 - AI助教版
+# 歡迎使用具備AI助教功能的協作編程環境！
+
+def fibonacci_sequence(n):
+    """
+    生成斐波那契數列
+    
+    參數:
+        n (int): 要生成的數列長度
+    
+    返回:
+        list: 斐波那契數列
+    """
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+    
+    sequence = [0, 1]
+    for i in range(2, n):
+        next_num = sequence[i-1] + sequence[i-2]
+        sequence.append(next_num)
+    
+    return sequence
+
+def analyze_sequence(sequence):
+    """分析數列的特性"""
+    if not sequence:
+        return "數列為空"
+    
+    total = sum(sequence)
+    average = total / len(sequence)
+    max_num = max(sequence)
+    
+    print(f"數列長度: {len(sequence)}")
+    print(f"總和: {total}")
+    print(f"平均值: {average:.2f}")
+    print(f"最大值: {max_num}")
+    
+    return {
+        'length': len(sequence),
+        'sum': total,
+        'average': average,
+        'max': max_num
+    }
+
+# 主程式
+if __name__ == "__main__":
+    print("🔥 協作編程示例：斐波那契數列分析")
+    
+    # 生成前15個斐波那契數
+    fib_sequence = fibonacci_sequence(15)
+    print(f"前15個斐波那契數: {fib_sequence}")
+    
+    # 分析數列特性
+    analysis = analyze_sequence(fib_sequence)
+    print("\\n📊 數列分析完成！")
+    
+    # 💡 試試看：
+    # 1. 點擊"解釋程式碼"讓AI助教說明這個程式
+    # 2. 點擊"檢查錯誤"讓AI檢查程式是否有問題
+    # 3. 點擊"改進建議"獲得程式碼優化建議
+    # 4. 開啟多個標籤頁體驗即時協作功能！`;
+            
+            editor.setValue(initialCode);
+            
+            // 監聽編輯器變化
+            editor.on('change', function(cm, change) {
+                if (change.origin !== 'sync') {
+                    debounce(syncCode, syncDelay)();
+                }
+            });
+            
+            // 載入房間代碼
+            loadRoomCode();
+        }
+        
+        // 防抖函數
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // 同步代碼到其他標籤頁
+        function syncCode() {
+            const code = editor.getValue();
+            const now = Date.now();
+            
+            currentVersion++;
+            
+            const syncData = {
+                type: 'code_sync',
+                room: currentRoom,
+                code: code,
+                version: currentVersion,
+                userId: userId,
+                userName: userName,
+                timestamp: now
+            };
+            
+            // 保存到localStorage
+            localStorage.setItem(`room_${currentRoom}_code`, JSON.stringify(syncData));
+            
+            // 廣播到其他標籤頁
+            channel.postMessage(syncData);
+            
+            // 更新延遲顯示
+            const delay = now - lastSyncTime;
+            document.getElementById('syncDelay').textContent = `延遲: ~${delay}ms`;
+            lastSyncTime = now;
+            
+            console.log(`📤 代碼同步: 版本 ${currentVersion}, 延遲 ${delay}ms`);
+        }
+        
+        // 載入房間代碼
+        function loadRoomCode() {
+            const savedData = localStorage.getItem(`room_${currentRoom}_code`);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    if (data.code && data.code !== editor.getValue()) {
+                        editor.setValue(data.code);
+                        currentVersion = data.version || 0;
+                        console.log(`📥 載入房間代碼: 版本 ${currentVersion}`);
+                    }
+                } catch (e) {
+                    console.error('載入房間代碼失敗:', e);
+                }
+            }
+        }
+        
+        // 處理來自其他標籤頁的消息
+        channel.onmessage = function(event) {
+            const data = event.data;
+            
+            switch (data.type) {
+                case 'code_sync':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        if (data.version > currentVersion) {
+                            editor.setValue(data.code);
+                            currentVersion = data.version;
+                            console.log(`📥 接收代碼同步: 版本 ${currentVersion} from ${data.userName}`);
+                            showSyncNotification(data.userName);
+                        }
+                    }
+                    break;
+                    
+                case 'chat_message':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addChatMessage(data.userName, data.message, data.timestamp);
+                    }
+                    break;
+                    
+                case 'ai_response':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addAIMessage(data.response, data.action);
+                    }
+                    break;
+                    
+                case 'user_joined':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addChatMessage('系統', `${data.userName} 加入了房間`, Date.now());
+                        updateUserList();
+                    }
+                    break;
+                    
+                case 'user_left':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addChatMessage('系統', `${data.userName} 離開了房間`, Date.now());
+                        updateUserList();
+                    }
+                    break;
+            }
+        };
+        
+        // 顯示同步通知
+        function showSyncNotification(userName) {
+            const indicator = document.querySelector('.status-dot');
+            indicator.style.background = '#ff6b6b';
+            setTimeout(() => {
+                indicator.style.background = '#28a745';
+            }, 200);
+        }
+        
+        // 發送聊天消息
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                const timestamp = Date.now();
+                
+                // 檢查是否為AI相關問題
+                if (message.includes('AI') || message.includes('助教') || message.includes('解釋') || 
+                    message.includes('錯誤') || message.includes('改進') || message.includes('幫助')) {
+                    // 自動觸發AI回應
+                    askAIWithCustomPrompt(message);
+                }
+                
+                const chatData = {
+                    type: 'chat_message',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName,
+                    message: message,
+                    timestamp: timestamp
+                };
+                
+                addChatMessage(userName + ' (您)', message, timestamp);
+                channel.postMessage(chatData);
+                
+                input.value = '';
+            }
+        }
+        
+        // 添加聊天消息
+        function addChatMessage(user, message, timestamp) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const time = new Date(timestamp).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-user">${user}</span>
+                    <span class="message-time">${time}</span>
+                </div>
+                <div class="message-content">${escapeHtml(message)}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // 添加AI消息
+        function addAIMessage(response, action = 'general') {
+            const messagesContainer = document.getElementById('ai-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'ai-message';
+            
+            const time = new Date().toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const actionEmoji = {
+                'explain': '📝',
+                'bugs': '🐛',
+                'improve': '💡',
+                'help': '🤝',
+                'general': '🤖'
+            };
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-user">${actionEmoji[action] || '🤖'} AI助教</span>
+                    <span class="message-time">${time}</span>
+                </div>
+                <div class="ai-content">${response.replace(/\n/g, '<br>')}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // AI助教功能
+        async function askAI(action) {
+            const code = editor.getValue();
+            const buttons = document.querySelectorAll('.btn-ai');
+            
+            // 禁用按鈕並顯示加載狀態
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.onclick.toString().includes(action)) {
+                    btn.innerHTML = `<span class="loading"></span> 處理中...`;
+                }
+            });
+            
+            try {
+                let prompt = '';
+                switch (action) {
+                    case 'explain':
+                        prompt = `請用繁體中文詳細解釋這段Python程式碼的功能、邏輯和每個部分的作用：\n\n${code}`;
+                        break;
+                    case 'bugs':
+                        prompt = `請用繁體中文仔細檢查這段Python程式碼，找出可能的錯誤、問題或需要改進的地方：\n\n${code}`;
+                        break;
+                    case 'improve':
+                        prompt = `請用繁體中文為這段Python程式碼提供優化建議，包括性能改進、程式碼可讀性和最佳實踐：\n\n${code}`;
+                        break;
+                    case 'help':
+                        prompt = `在多人協作編程的情境下，請用繁體中文提供關於這段Python程式碼的協作建議和學習指導：\n\n${code}`;
+                        break;
+                }
+                
+                const response = await callOpenAI(prompt);
+                addAIMessage(response, action);
+                
+                // 廣播AI回應給其他用戶
+                channel.postMessage({
+                    type: 'ai_response',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName,
+                    response: response,
+                    action: action,
+                    timestamp: Date.now()
+                });
+                
+            } catch (error) {
+                console.error('AI請求失敗:', error);
+                addAIMessage('抱歉，AI助教暫時無法回應。可能是網路問題或API限制，請稍後再試。', action);
+            } finally {
+                // 恢復按鈕狀態
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                });
+                
+                // 恢復按鈕文字
+                const buttonTexts = {
+                    'explain': '📝 解釋程式碼',
+                    'bugs': '🐛 檢查錯誤',
+                    'improve': '💡 改進建議',
+                    'help': '🤝 協作指導'
+                };
+                
+                buttons.forEach(btn => {
+                    Object.keys(buttonTexts).forEach(key => {
+                        if (btn.onclick.toString().includes(key)) {
+                            btn.innerHTML = buttonTexts[key];
+                        }
+                    });
+                });
+            }
+        }
+        
+        // 自定義AI提問
+        async function askAIWithCustomPrompt(userMessage) {
+            try {
+                const code = editor.getValue();
+                const prompt = `用戶在協作編程環境中問：「${userMessage}」\n\n當前的Python程式碼是：\n${code}\n\n請用繁體中文回答用戶的問題，並結合程式碼內容提供有用的建議。`;
+                
+                const response = await callOpenAI(prompt);
+                addAIMessage(response, 'general');
+                
+            } catch (error) {
+                console.error('AI自定義請求失敗:', error);
+                addAIMessage('抱歉，我現在無法回答您的問題。請稍後再試或使用上方的功能按鈕。', 'general');
+            }
+        }
+        
+        // 呼叫OpenAI API
+        async function callOpenAI(prompt) {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是一個專業的Python程式設計助教，專門幫助學生學習Python並提供協作編程指導。請用繁體中文回答，並且保持友善、鼓勵的語調。回答要簡潔明瞭，並提供實用的建議。'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    max_tokens: 800,
+                    temperature: 0.7
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API請求失敗: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                throw new Error('API回應格式錯誤');
+            }
+            
+            return data.choices[0].message.content;
+        }
+        
+        // HTML轉義
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 加入房間
+        function joinRoom() {
+            const newRoom = document.getElementById('room-name').value.trim() || 'demo-room';
+            if (newRoom !== currentRoom) {
+                channel.postMessage({
+                    type: 'user_left',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName
+                });
+                
+                currentRoom = newRoom;
+                currentVersion = 0;
+                
+                document.getElementById('chat-messages').innerHTML = '';
+                document.getElementById('ai-messages').innerHTML = `
+                    <div class="ai-message">
+                        <div class="message-header">
+                            <span class="message-user">🤖 AI助教</span>
+                            <span class="message-time">剛才</span>
+                        </div>
+                        <div class="ai-content">歡迎來到房間 ${newRoom}！我是您的AI助教，隨時為您提供程式設計協助。</div>
+                    </div>
+                `;
+                
+                loadRoomCode();
+                
+                channel.postMessage({
+                    type: 'user_joined',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName
+                });
+                
+                addChatMessage('系統', `您已加入房間: ${currentRoom}`, Date.now());
+                console.log(`🏠 加入房間: ${currentRoom}`);
+            }
+        }
+        
+        // 模擬協作編輯
+        function simulateCollaboration() {
+            const collaborationCode = `
+# 🤖 協作夥伴添加的程式碼
+def collaborative_example():
+    """這是協作夥伴貢獻的函數"""
+    print("多人協作讓學習更有趣！")
+    
+    # 協作學習的好處
+    benefits = [
+        "互相學習",
+        "分享經驗", 
+        "共同解決問題",
+        "提高程式品質"
+    ]
+    
+    for benefit in benefits:
+        print(f"✨ {benefit}")
+    
+    return "協作成功！"
+
+# 測試協作功能
+print(collaborative_example())
+`;
+            
+            const currentCode = editor.getValue();
+            editor.setValue(currentCode + collaborationCode);
+            
+            setTimeout(() => {
+                addChatMessage('協作夥伴', '我剛剛添加了一些協作示例代碼，一起來看看吧！', Date.now());
+                addAIMessage('我看到有新的程式碼被添加了！這個協作示例很棒，展示了多人協作的優點。需要我解釋這段新程式碼嗎？', 'general');
+            }, 500);
+        }
+        
+        // 導出代碼
+        function exportCode() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `python_collaboration_${currentRoom}_${new Date().toISOString().slice(0,16).replace('T', '_')}.py`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addChatMessage('系統', '程式碼已導出下載', Date.now());
+            addAIMessage('程式碼導出成功！建議您定期備份重要的程式碼，這是良好的開發習慣。', 'general');
+        }
+        
+        // 清空代碼
+        function clearCode() {
+            if (confirm('確定要清空所有程式碼嗎？')) {
+                editor.setValue('# 新的協作開始...\n# 歡迎使用Python協作教學平台！\n\n');
+                addChatMessage('系統', '程式碼已清空，重新開始協作', Date.now());
+                addAIMessage('程式碼已清空！準備開始新的編程挑戰了嗎？我隨時為您提供協助。', 'general');
+            }
+        }
+        
+        // 更新同步延遲
+        function updateSyncDelay() {
+            syncDelay = parseInt(document.getElementById('sync-delay').value);
+            console.log(`⚙️ 同步延遲更新為: ${syncDelay}ms`);
+        }
+        
+        // 更新用戶列表（模擬）
+        function updateUserList() {
+            const userList = document.getElementById('user-list');
+            const userCount = document.getElementById('user-count');
+            
+            const simulatedUsers = [
+                `${userName} (您)`,
+                '張同學',
+                '李同學', 
+                '王老師',
+                'AI助教'
+            ];
+            
+            const randomUserCount = Math.floor(Math.random() * (simulatedUsers.length - 1)) + 2;
+            const currentUsers = simulatedUsers.slice(0, randomUserCount);
+            
+            userList.innerHTML = currentUsers.map(user => 
+                `<div class="user-badge">${user}</div>`
+            ).join('');
+            
+            userCount.textContent = currentUsers.length;
+        }
+        
+        // 聊天輸入框回車發送
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initEditor();
+            updateUserList();
+            
+            // 歡迎消息
+            setTimeout(() => {
+                addChatMessage('AI助教', '🎉 歡迎使用Python協作教學平台！我是您的專屬AI助教，隨時為您解答程式問題。開啟多個標籤頁體驗真正的協作編輯功能！', Date.now());
+            }, 1000);
+            
+            // 定期更新用戶列表
+            setInterval(updateUserList, 8000);
+        });
+        
+        // 頁面關閉時通知其他標籤頁
+        window.addEventListener('beforeunload', function() {
+            channel.postMessage({
+                type: 'user_left',
+                room: currentRoom,
+                userId: userId,
+                userName: userName
+            });
+        });
+    </script>
+</body>
+</html> 

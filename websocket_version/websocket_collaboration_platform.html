@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Python協作教學平台 - WebSocket即時版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        .collaboration-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .code-section {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+            min-width: 350px;
+        }
+        
+        .CodeMirror {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .toolbar {
+            background: #343a40;
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .status-bar {
+            background: #495057;
+            color: white;
+            padding: 0.3rem 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ai-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ai-response {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: white;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: white;
+            max-height: 300px;
+        }
+        
+        .message {
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border-left: 3px solid #007bff;
+            background: #f8f9fa;
+        }
+        
+        .message.own {
+            border-left-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        .message-header {
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.2rem;
+        }
+        
+        .users-list {
+            background: #e9ecef;
+            padding: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .user-badge {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin: 0.1rem;
+        }
+        
+        .user-badge.self {
+            background: #28a745;
+        }
+        
+        .connection-status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .connection-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .connection-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .connection-status.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .latency-display {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .version-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .btn-sm {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .code-section {
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            .sidebar {
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="collaboration-container">
+        <!-- 頭部區域 -->
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4 class="mb-0">🚀 Python協作教學平台 - WebSocket即時版</h4>
+                    <small>延遲 &lt;0.5秒 的真正實時協作編程</small>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex align-items-center justify-content-md-end gap-3">
+                        <div>
+                            <label for="roomCode" class="form-label mb-0">房間代碼:</label>
+                            <input type="text" id="roomCode" class="form-control form-control-sm d-inline-block ms-1" 
+                                   style="width: 120px;" value="room001" placeholder="輸入房間代碼">
+                        </div>
+                        <div>
+                            <label for="userName" class="form-label mb-0">用戶名:</label>
+                            <input type="text" id="userName" class="form-control form-control-sm d-inline-block ms-1" 
+                                   style="width: 120px;" placeholder="輸入用戶名">
+                        </div>
+                        <div>
+                            <label for="serverIP" class="form-label mb-0">服務器IP:</label>
+                            <input type="text" id="serverIP" class="form-control form-control-sm d-inline-block ms-1" 
+                                   style="width: 140px;" value="192.168.31.32" placeholder="localhost">
+                        </div>
+                        <button id="joinRoomBtn" class="btn btn-light btn-sm">加入房間</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要內容區域 -->
+        <div class="main-content">
+            <!-- 代碼編輯區域 -->
+            <div class="code-section">
+                <!-- 工具欄 -->
+                <div class="toolbar">
+                    <button id="runCodeBtn" class="btn btn-success btn-sm">▶️ 運行代碼</button>
+                    <div class="vr"></div>
+                    <span class="connection-status" id="connectionStatus">未連接</span>
+                    <div class="vr"></div>
+                    <span class="latency-display" id="latencyDisplay">延遲: -- ms</span>
+                    <div class="vr"></div>
+                    <span class="version-info" id="versionInfo">版本: --</span>
+                    <div class="ms-auto">
+                        <small>WebSocket: <span id="wsUrl">ws://localhost:8080</span></small>
+                    </div>
+                </div>
+                
+                <!-- 代碼編輯器 -->
+                <textarea id="codeEditor"></textarea>
+                
+                <!-- 狀態欄 -->
+                <div class="status-bar">
+                    <div>
+                        <span id="cursorPosition">行: 1, 列: 1</span>
+                        <span class="ms-3">字符數: <span id="charCount">0</span></span>
+                    </div>
+                    <div>
+                        <span>最後更新: <span id="lastUpdate">--</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 側邊欄 -->
+            <div class="sidebar">
+                <!-- 用戶列表 -->
+                <div class="users-list">
+                    <strong>在線用戶 (<span id="userCount">0</span>):</strong>
+                    <div id="usersList" class="mt-1"></div>
+                </div>
+                
+                <!-- AI助教面板 -->
+                <div class="ai-panel">
+                    <div class="bg-primary text-white p-2">
+                        <strong>🤖 AI助教</strong>
+                        <div class="btn-group float-end" role="group">
+                            <button class="btn btn-outline-light btn-sm" onclick="callAI('explain')">解釋程式</button>
+                            <button class="btn btn-outline-light btn-sm" onclick="callAI('bugs')">檢查錯誤</button>
+                            <button class="btn btn-outline-light btn-sm" onclick="callAI('improve')">改進建議</button>
+                        </div>
+                    </div>
+                    <div class="ai-response" id="aiResponse">
+                        <div class="text-muted text-center p-3">
+                            點擊上方按鈕使用AI助教功能<br>
+                            <small>WebSocket版本支持實時AI分析</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 聊天面板 -->
+                <div class="chat-panel">
+                    <div class="bg-secondary text-white p-2">
+                        <strong>💬 即時聊天</strong>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="text-muted text-center p-3">
+                            <small>歡迎使用即時聊天功能</small>
+                        </div>
+                    </div>
+                    <div class="p-2 border-top">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" class="form-control form-control-sm" 
+                                   placeholder="輸入聊天訊息...">
+                            <button id="sendChatBtn" class="btn btn-primary btn-sm">發送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+
+    <script>
+        // WebSocket協作管理器
+        class WebSocketCollaborationManager {
+            constructor() {
+                this.ws = null;
+                this.connectionStatus = 'disconnected';
+                this.userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                this.userName = '';
+                this.roomCode = '';
+                this.isConnected = false;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+                this.pingInterval = null;
+                this.lastPingTime = 0;
+                this.latency = 0;
+                this.currentVersion = 1;
+                this.isReceivingUpdate = false;
+                
+                this.initializeUI();
+                this.setupEventListeners();
+            }
+            
+            initializeUI() {
+                // 初始化CodeMirror
+                this.editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+                    mode: 'python',
+                    theme: 'monokai',
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    indentUnit: 4,
+                    indentWithTabs: false,
+                    autoCloseBrackets: true,
+                    matchBrackets: true,
+                    showCursorWhenSelecting: true
+                });
+                
+                // 設置編輯器事件
+                this.editor.on('changes', (instance, changes) => {
+                    this.handleCodeChange();
+                });
+                
+                this.editor.on('cursorActivity', (instance) => {
+                    this.handleCursorChange();
+                    this.updateCursorPosition();
+                });
+                
+                // 設置初始狀態
+                this.updateConnectionStatus('disconnected');
+                this.updateUserName();
+            }
+            
+            setupEventListeners() {
+                // 加入房間按鈕
+                document.getElementById('joinRoomBtn').addEventListener('click', () => {
+                    this.joinRoom();
+                });
+                
+                // 發送聊天按鈕
+                document.getElementById('sendChatBtn').addEventListener('click', () => {
+                    this.sendChatMessage();
+                });
+                
+                // 聊天輸入框回車事件
+                document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendChatMessage();
+                    }
+                });
+                
+                // 運行代碼按鈕
+                document.getElementById('runCodeBtn').addEventListener('click', () => {
+                    this.runCode();
+                });
+                
+                // 用戶名變更
+                document.getElementById('userName').addEventListener('change', () => {
+                    this.updateUserName();
+                });
+                
+                // 房間代碼回車事件
+                document.getElementById('roomCode').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.joinRoom();
+                    }
+                });
+            }
+            
+            connect() {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    return;
+                }
+                
+                // 自動檢測環境並設置WebSocket URL
+                let serverIP = '';
+                let wsUrl = '';
+                
+                // 檢查是否在Zeabur雲端環境
+                if (window.location.hostname.includes('zeabur.app')) {
+                    // Zeabur環境：使用wss安全連接
+                    serverIP = window.location.hostname;
+                    wsUrl = `wss://${serverIP}:8080`;
+                } else {
+                    // 本地環境：檢查用戶設置
+                    const customServerIP = document.getElementById('serverIP')?.value?.trim();
+                    serverIP = customServerIP || 'localhost';
+                    wsUrl = `ws://${serverIP}:8080`;
+                }
+                
+                // 更新服務器IP顯示
+                document.getElementById('serverIP').value = serverIP;
+                
+                // 更新URL顯示
+                this.updateWebSocketUrlDisplay(wsUrl);
+                
+                this.updateConnectionStatus('connecting');
+                console.log(`🔌 嘗試連接到: ${wsUrl}`);
+                
+                try {
+                    this.ws = new WebSocket(wsUrl);
+                    
+                    this.ws.onopen = (event) => {
+                        console.log('🔗 WebSocket連接建立');
+                        this.isConnected = true;
+                        this.reconnectAttempts = 0;
+                        this.updateConnectionStatus('connected');
+                        this.startPingInterval();
+                        
+                        // 如果有房間代碼，自動加入
+                        if (this.roomCode) {
+                            this.sendJoinRoom();
+                        }
+                    };
+                    
+                    this.ws.onmessage = (event) => {
+                        this.handleMessage(JSON.parse(event.data));
+                    };
+                    
+                    this.ws.onclose = (event) => {
+                        console.log('🔌 WebSocket連接關閉', event);
+                        this.isConnected = false;
+                        this.updateConnectionStatus('disconnected');
+                        this.stopPingInterval();
+                        
+                        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                            this.reconnect();
+                        }
+                    };
+                    
+                    this.ws.onerror = (error) => {
+                        console.error('❌ WebSocket錯誤:', error);
+                        this.updateConnectionStatus('disconnected');
+                    };
+                    
+                } catch (error) {
+                    console.error('連接錯誤:', error);
+                    this.updateConnectionStatus('disconnected');
+                }
+            }
+            
+            reconnect() {
+                this.reconnectAttempts++;
+                console.log(`🔄 重連嘗試 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+                
+                setTimeout(() => {
+                    this.connect();
+                }, 2000 * this.reconnectAttempts);
+            }
+            
+            joinRoom() {
+                this.roomCode = document.getElementById('roomCode').value.trim();
+                this.userName = document.getElementById('userName').value.trim() || '匿名用戶';
+                
+                if (!this.roomCode) {
+                    alert('請輸入房間代碼');
+                    return;
+                }
+                
+                if (!this.isConnected) {
+                    this.connect();
+                } else {
+                    this.sendJoinRoom();
+                }
+            }
+            
+            sendJoinRoom() {
+                if (!this.isConnected) return;
+                
+                this.sendMessage({
+                    action: 'join_room',
+                    room: this.roomCode,
+                    user_id: this.userId,
+                    user_name: this.userName
+                });
+            }
+            
+            handleMessage(data) {
+                const { type, action } = data;
+                
+                switch (type) {
+                    case 'system':
+                        if (action === 'welcome') {
+                            console.log('🎉 收到歡迎消息:', data.message);
+                        }
+                        break;
+                        
+                    case 'room_state':
+                        this.handleRoomState(data);
+                        break;
+                        
+                    case 'code_change':
+                        this.handleCodeUpdate(data);
+                        break;
+                        
+                    case 'cursor_change':
+                        this.handleCursorUpdate(data);
+                        break;
+                        
+                    case 'chat_message':
+                        this.handleChatMessage(data);
+                        break;
+                        
+                    case 'user_joined':
+                    case 'user_left':
+                        this.updateUsersList(data.users);
+                        break;
+                        
+                    case 'pong':
+                        this.handlePong(data);
+                        break;
+                        
+                    case 'error':
+                        console.error('服務器錯誤:', data.message);
+                        alert('錯誤: ' + data.message);
+                        break;
+                        
+                    default:
+                        console.log('未處理的消息類型:', type, data);
+                }
+            }
+            
+            handleRoomState(data) {
+                console.log('🏠 房間狀態更新:', data);
+                
+                // 更新代碼內容
+                this.isReceivingUpdate = true;
+                this.editor.setValue(data.code || '');
+                this.currentVersion = data.version || 1;
+                this.isReceivingUpdate = false;
+                
+                // 更新用戶列表
+                this.updateUsersList(data.users);
+                
+                // 更新版本信息
+                this.updateVersionInfo();
+                
+                // 更新字符計數
+                this.updateCharCount();
+            }
+            
+            handleCodeUpdate(data) {
+                if (data.user_id === this.userId) return; // 忽略自己的更新
+                
+                console.log('📝 收到代碼更新 from', data.user_name);
+                
+                this.isReceivingUpdate = true;
+                this.editor.setValue(data.code || '');
+                this.currentVersion = data.version || this.currentVersion + 1;
+                this.isReceivingUpdate = false;
+                
+                this.updateVersionInfo();
+                this.updateCharCount();
+                this.updateLastUpdate(data.user_name);
+            }
+            
+            handleCursorUpdate(data) {
+                // TODO: 實現多用戶游標顯示
+                console.log('👆 游標更新:', data.user_name, data.cursor);
+            }
+            
+            handleChatMessage(data) {
+                this.addChatMessage(data.user_name, data.message, data.user_id === this.userId);
+            }
+            
+            handlePong(data) {
+                if (data.client_timestamp === this.lastPingTime) {
+                    this.latency = Date.now() - this.lastPingTime;
+                    this.updateLatencyDisplay();
+                }
+            }
+            
+            handleCodeChange() {
+                if (this.isReceivingUpdate) return;
+                
+                const code = this.editor.getValue();
+                this.sendMessage({
+                    action: 'code_change',
+                    code: code,
+                    version: this.currentVersion
+                });
+                
+                this.updateCharCount();
+            }
+            
+            handleCursorChange() {
+                if (this.isReceivingUpdate) return;
+                
+                const cursor = this.editor.getCursor();
+                this.sendMessage({
+                    action: 'cursor_change',
+                    cursor: {
+                        line: cursor.line,
+                        ch: cursor.ch
+                    }
+                });
+            }
+            
+            sendChatMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (!message || !this.isConnected) return;
+                
+                this.sendMessage({
+                    action: 'chat_message',
+                    message: message
+                });
+                
+                input.value = '';
+            }
+            
+            startPingInterval() {
+                this.pingInterval = setInterval(() => {
+                    if (this.isConnected) {
+                        this.lastPingTime = Date.now();
+                        this.sendMessage({
+                            action: 'ping',
+                            timestamp: this.lastPingTime
+                        });
+                    }
+                }, 5000);
+            }
+            
+            stopPingInterval() {
+                if (this.pingInterval) {
+                    clearInterval(this.pingInterval);
+                    this.pingInterval = null;
+                }
+            }
+            
+            sendMessage(data) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify(data));
+                }
+            }
+            
+            // UI更新方法
+            updateConnectionStatus(status) {
+                this.connectionStatus = status;
+                const statusEl = document.getElementById('connectionStatus');
+                const statusTexts = {
+                    'connected': '🟢 已連接',
+                    'connecting': '🟡 連接中...',
+                    'disconnected': '🔴 未連接'
+                };
+                
+                statusEl.textContent = statusTexts[status] || status;
+                statusEl.className = `connection-status ${status}`;
+            }
+            
+            updateLatencyDisplay() {
+                document.getElementById('latencyDisplay').textContent = `延遲: ${this.latency}ms`;
+            }
+            
+            updateVersionInfo() {
+                document.getElementById('versionInfo').textContent = `版本: ${this.currentVersion}`;
+            }
+            
+            updateCursorPosition() {
+                const cursor = this.editor.getCursor();
+                document.getElementById('cursorPosition').textContent = `行: ${cursor.line + 1}, 列: ${cursor.ch + 1}`;
+            }
+            
+            updateCharCount() {
+                const count = this.editor.getValue().length;
+                document.getElementById('charCount').textContent = count;
+            }
+            
+            updateLastUpdate(userName) {
+                const now = new Date().toLocaleTimeString();
+                document.getElementById('lastUpdate').textContent = `${userName} ${now}`;
+            }
+            
+            updateUserName() {
+                const userName = document.getElementById('userName').value.trim();
+                if (userName) {
+                    this.userName = userName;
+                }
+            }
+            
+            updateUsersList(users) {
+                const usersList = document.getElementById('usersList');
+                const userCount = document.getElementById('userCount');
+                
+                userCount.textContent = users.length;
+                
+                usersList.innerHTML = users.map(user => 
+                    `<span class="user-badge ${user.user_id === this.userId ? 'self' : ''}">${user.user_name}</span>`
+                ).join('');
+            }
+            
+            addChatMessage(userName, message, isOwn = false) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+                
+                const time = new Date().toLocaleTimeString();
+                messageDiv.innerHTML = `
+                    <div class="message-header">${userName} - ${time}</div>
+                    <div>${this.escapeHtml(message)}</div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            runCode() {
+                // 這裡可以實現代碼運行功能
+                alert('WebSocket版本的代碼運行功能開發中...');
+            }
+            
+            updateWebSocketUrlDisplay(wsUrl) {
+                const wsUrlDisplay = document.getElementById('wsUrl');
+                wsUrlDisplay.textContent = wsUrl;
+            }
+        }
+        
+        // AI助教功能
+        async function callAI(action) {
+            const code = collaborationManager.editor.getValue();
+            const aiResponse = document.getElementById('aiResponse');
+            
+            aiResponse.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm"></div> AI助教分析中...</div>';
+            
+            try {
+                const response = await fetch('/collaboration/ai_api_handler.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        code: code,
+                        user_id: collaborationManager.userId,
+                        room: collaborationManager.roomCode
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 使用marked庫渲染Markdown
+                    aiResponse.innerHTML = marked.parse(result.response);
+                } else {
+                    aiResponse.innerHTML = `<div class="alert alert-danger">AI助教錯誤: ${result.error}</div>`;
+                }
+            } catch (error) {
+                console.error('AI請求錯誤:', error);
+                aiResponse.innerHTML = '<div class="alert alert-danger">連接AI助教失敗，請檢查網路連接</div>';
+            }
+        }
+        
+        // 初始化協作管理器
+        const collaborationManager = new WebSocketCollaborationManager();
+        
+        // 設置用戶名隨機值
+        document.getElementById('userName').value = '用戶_' + Math.random().toString(36).substr(2, 4);
+        
+        console.log('🚀 WebSocket協作平台初始化完成');
+    </script>
+</body>
+</html> 

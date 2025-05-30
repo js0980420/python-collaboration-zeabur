@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}AI 助教 - Python 程式設計教學網站{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-robot me-3"></i>AI 智能助教
+                </h1>
+                <p class="lead text-muted">
+                    24小時在線的Python專業助教，隨時為您解答疑問
+                </p>
+            </div>
+
+            <!-- AI助教介紹卡片 -->
+            <div class="card card-custom mb-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <div class="card-icon" style="font-size: 4rem; margin-bottom: 0;">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <h4>您好！我是您的Python助教</h4>
+                            <p class="mb-2">我可以幫助您：</p>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>解釋Python概念</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>檢查程式碼錯誤</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>提供學習建議</li>
+                                    </ul>
+                                </div>
+                                <div class="col-sm-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>回答程式問題</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>推薦練習題目</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>程式碼最佳化建議</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 聊天界面 -->
+            <div class="card card-custom">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>與AI助教對話
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <!-- 聊天訊息區域 -->
+                    <div id="chatContainer" class="chat-container">
+                        <div class="chat-message ai">
+                            <div class="message-bubble ai">
+                                <strong>AI助教：</strong>您好！我是您的Python程式設計助教。有什麼關於Python的問題都可以問我喔！
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 輸入區域 -->
+                    <div class="p-3 border-top">
+                        <div class="input-group">
+                            <textarea 
+                                id="messageInput" 
+                                class="form-control" 
+                                placeholder="輸入您的問題... (支援程式碼)"
+                                rows="3"
+                                style="resize: none;"
+                            ></textarea>
+                            <button 
+                                id="sendBtn" 
+                                class="btn btn-primary-custom" 
+                                type="button"
+                                style="align-self: end;"
+                            >
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            按 Ctrl + Enter 快速發送訊息
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 常見問題快捷按鈕 -->
+            <div class="mt-4">
+                <h5>常見問題：</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-secondary btn-sm quick-question" 
+                            data-question="什麼是Python變數？">
+                        什麼是變數？
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm quick-question" 
+                            data-question="如何使用for迴圈？">
+                        如何使用for迴圈？
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm quick-question" 
+                            data-question="Python函數怎麼定義？">
+                        函數怎麼定義？
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm quick-question" 
+                            data-question="列表和字典有什麼差別？">
+                        列表vs字典
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm quick-question" 
+                            data-question="如何處理錯誤和例外？">
+                        錯誤處理
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm quick-question" 
+                            data-question="Python適合做什麼項目？">
+                        Python應用
+                    </button>
+                </div>
+            </div>
+
+            <!-- 使用提示 -->
+            <div class="alert alert-info-custom mt-4">
+                <h6><i class="fas fa-lightbulb me-2"></i>使用小提示：</h6>
+                <ul class="mb-0">
+                    <li>可以直接貼上程式碼讓AI助教幫您檢查</li>
+                    <li>描述問題時越詳細，AI的回答會越準確</li>
+                    <li>遇到錯誤訊息時，可以把完整的錯誤訊息貼給AI看</li>
+                    <li>AI會用繁體中文回答，並提供程式碼範例</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// AI助教聊天功能
+class AITutor {
+    constructor() {
+        this.chatContainer = document.getElementById('chatContainer');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendBtn = document.getElementById('sendBtn');
+        this.quickQuestions = document.querySelectorAll('.quick-question');
+        
+        this.initEventListeners();
+    }
+    
+    initEventListeners() {
+        // 發送按鈕點擊事件
+        this.sendBtn.addEventListener('click', () => this.sendMessage());
+        
+        // 輸入框按鍵事件
+        this.messageInput.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+        
+        // 快速問題按鈕
+        this.quickQuestions.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const question = e.target.getAttribute('data-question');
+                this.messageInput.value = question;
+                this.sendMessage();
+            });
+        });
+    }
+    
+    async sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message) return;
+        
+        // 顯示用戶訊息
+        this.addMessage(message, 'user');
+        this.messageInput.value = '';
+        
+        // 顯示載入中
+        const loadingId = this.showLoading();
+        
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            });
+            
+            const data = await response.json();
+            
+            // 移除載入中
+            this.removeLoading(loadingId);
+            
+            if (data.error) {
+                this.addMessage(`錯誤：${data.error}`, 'ai');
+            } else {
+                this.addMessage(data.response, 'ai');
+            }
+        } catch (error) {
+            this.removeLoading(loadingId);
+            this.addMessage('抱歉，發生了網路錯誤。請稍後再試。', 'ai');
+        }
+    }
+    
+    addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender}`;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = `message-bubble ${sender}`;
+        
+        if (sender === 'ai') {
+            bubbleDiv.innerHTML = `<strong>AI助教：</strong>${this.formatMessage(content)}`;
+        } else {
+            bubbleDiv.innerHTML = `<strong>您：</strong>${this.escapeHtml(content)}`;
+        }
+        
+        messageDiv.appendChild(bubbleDiv);
+        this.chatContainer.appendChild(messageDiv);
+        
+        // 滾動到底部
+        this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+    }
+    
+    showLoading() {
+        const loadingId = 'loading-' + Date.now();
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message ai';
+        messageDiv.id = loadingId;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'message-bubble ai';
+        bubbleDiv.innerHTML = '<strong>AI助教：</strong><span class="loading"></span> 正在思考中...';
+        
+        messageDiv.appendChild(bubbleDiv);
+        this.chatContainer.appendChild(messageDiv);
+        this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+        
+        return loadingId;
+    }
+    
+    removeLoading(loadingId) {
+        const loadingElement = document.getElementById(loadingId);
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+    }
+    
+    formatMessage(content) {
+        // 簡單的Markdown式格式化
+        content = this.escapeHtml(content);
+        
+        // 代碼塊格式化
+        content = content.replace(/```python\n([\s\S]*?)\n```/g, 
+            '<pre><code class="language-python">$1</code></pre>');
+        content = content.replace(/```([\s\S]*?)```/g, 
+            '<pre><code>$1</code></pre>');
+        
+        // 行內代碼
+        content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // 換行
+        content = content.replace(/\n/g, '<br>');
+        
+        return content;
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+}
+
+// 初始化AI助教
+document.addEventListener('DOMContentLoaded', () => {
+    new AITutor();
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Python雙人協作教學平台 - 衝突測試版</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 頂部控制欄 */
+        .top-bar {
+            background: #2d2d2d;
+            padding: 10px 20px;
+            border-bottom: 2px solid #404040;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #61dafb;
+        }
+        
+        .connection-panel {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            color: #bbb;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        
+        .input-group input {
+            padding: 6px 10px;
+            background: #3a3a3a;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 14px;
+            width: 120px;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #61dafb;
+            box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background: #61dafb;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn:hover {
+            background: #4fa8c5;
+            transform: translateY(-2px);
+        }
+        
+        .btn.connected {
+            background: #4caf50;
+        }
+        
+        .btn.disconnected {
+            background: #f44336;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #3a3a3a;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f44336;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.connected {
+            background: #4caf50;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* 主要內容區域 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        /* 左側：代碼編輯區域 */
+        .code-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #252526;
+            border-right: 2px solid #404040;
+        }
+        
+        .section-header {
+            background: #2d2d2d;
+            padding: 12px 16px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-indicators {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .user-badge {
+            padding: 4px 8px;
+            background: #404040;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .user-badge.active {
+            background: #4caf50;
+            color: #1a1a1a;
+        }
+        
+        .code-editor-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 16px;
+            resize: none;
+            tab-size: 4;
+        }
+        
+        .editor-tools {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .tool-btn {
+            padding: 6px 8px;
+            background: rgba(45, 45, 45, 0.9);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #bbb;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .tool-btn:hover {
+            background: #404040;
+            color: #e0e0e0;
+        }
+        
+        /* 右側：AI助教面板 */
+        .ai-section {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            background: #2a2a2a;
+        }
+        
+        .ai-controls {
+            padding: 12px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .ai-btn {
+            padding: 8px 12px;
+            background: #404040;
+            color: #e0e0e0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 80px;
+        }
+        
+        .ai-btn:hover {
+            background: #555;
+        }
+        
+        .ai-btn.explain { background: #2196f3; }
+        .ai-btn.check { background: #ff9800; }
+        .ai-btn.improve { background: #4caf50; }
+        .ai-btn.help { background: #9c27b0; }
+        
+        .ai-response {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .ai-message {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border-left: 4px solid #61dafb;
+        }
+        
+        .ai-message.loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #404040;
+            border-top: 2px solid #61dafb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 底部聊天區域 */
+        .chat-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 400px;
+            height: 200px;
+            background: #2d2d2d;
+            border-top: 2px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            padding: 8px 16px;
+            background: #3a3a3a;
+            border-bottom: 1px solid #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-toggle {
+            background: none;
+            border: none;
+            color: #bbb;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+        
+        .chat-message {
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            background: #404040;
+            border-radius: 6px;
+            max-width: 80%;
+        }
+        
+        .chat-message.own {
+            background: #61dafb;
+            color: #1a1a1a;
+            margin-left: auto;
+        }
+        
+        .chat-input-container {
+            padding: 8px 12px;
+            background: #3a3a3a;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #61dafb;
+        }
+        
+        .chat-send {
+            padding: 8px 12px;
+            background: #61dafb;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 1200px) {
+            .ai-section {
+                width: 350px;
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .ai-section {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .chat-section {
+                right: 0;
+                height: 150px;
+            }
+        }
+        
+        /* 版本衝突提示 */
+        .conflict-warning {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff5722;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+            z-index: 1000;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* 代碼同步狀態 */
+        .sync-status {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            background: rgba(45, 45, 45, 0.9);
+            border-radius: 4px;
+            font-size: 12px;
+            color: #bbb;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .sync-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4caf50;
+        }
+        
+        .sync-indicator.syncing {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+        
+        .sync-indicator.error {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <!-- 頂部控制欄 -->
+    <div class="top-bar">
+        <div class="logo">
+            <i class="fas fa-code-branch"></i>
+            <span>Python雙人協作教學平台</span>
+            <span style="font-size: 0.8em; color: #888;">衝突測試版</span>
+        </div>
+        
+        <div class="connection-panel">
+            <div class="input-group">
+                <label>房間號:</label>
+                <input type="text" id="roomCode" value="test_room" placeholder="輸入房間號">
+            </div>
+            
+            <div class="input-group">
+                <label>用戶名:</label>
+                <input type="text" id="userName" placeholder="輸入您的名字">
+            </div>
+            
+            <button class="btn disconnected" id="connectBtn">
+                <i class="fas fa-plug"></i>
+                <span>連接協作</span>
+            </button>
+            
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">未連接</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主要內容區域 -->
+    <div class="main-container">
+        <!-- 左側：代碼編輯區域 -->
+        <div class="code-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-code"></i>
+                    <span>協作代碼編輯器</span>
+                </div>
+                
+                <div class="user-indicators" id="userIndicators">
+                    <!-- 動態顯示在線用戶 -->
+                </div>
+            </div>
+            
+            <div class="code-editor-container">
+                <div class="editor-tools">
+                    <div class="tool-btn" title="複製代碼" onclick="copyCode()">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                    <div class="tool-btn" title="清空代碼" onclick="clearCode()">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <div class="tool-btn" title="重置為初始代碼" onclick="resetCode()">
+                        <i class="fas fa-undo"></i>
+                    </div>
+                </div>
+                
+                <textarea 
+                    class="code-editor" 
+                    id="codeEditor" 
+                    placeholder="在這裡輸入Python代碼...
+                    
+# 測試指南：
+# 1. 兩人同時連接到相同房間
+# 2. 一起編輯這段代碼
+# 3. 觀察即時同步效果
+# 4. 故意在同一行進行修改來測試衝突處理
+
+def hello_collaboration():
+    print('歡迎來到雙人協作編程！')
+    # 在這裡添加你的代碼
+    pass
+
+if __name__ == '__main__':
+    hello_collaboration()"></textarea>
+                
+                <div class="sync-status">
+                    <div class="sync-indicator" id="syncIndicator"></div>
+                    <span id="syncText">未同步</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右側：AI助教面板 -->
+        <div class="ai-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-robot"></i>
+                    <span>AI助教</span>
+                </div>
+            </div>
+            
+            <div class="ai-controls">
+                <button class="ai-btn explain" onclick="askAI('explain')">
+                    <i class="fas fa-lightbulb"></i> 解釋代碼
+                </button>
+                <button class="ai-btn check" onclick="askAI('bugs')">
+                    <i class="fas fa-bug"></i> 檢查錯誤
+                </button>
+                <button class="ai-btn improve" onclick="askAI('improve')">
+                    <i class="fas fa-magic"></i> 改進建議
+                </button>
+                <button class="ai-btn help" onclick="askAI('help')">
+                    <i class="fas fa-hands-helping"></i> 協作指導
+                </button>
+            </div>
+            
+            <div class="ai-response" id="aiResponse">
+                <div class="ai-message">
+                    <h3>🤖 AI助教已就緒</h3>
+                    <p>歡迎使用雙人協作平台！我可以幫助您：</p>
+                    <ul>
+                        <li>📝 解釋代碼功能和邏輯</li>
+                        <li>🐛 檢查程式錯誤和問題</li>
+                        <li>✨ 提供改進建議和優化</li>
+                        <li>🤝 指導協作編程技巧</li>
+                    </ul>
+                    <p><strong>開始協作：</strong>請輸入代碼然後點擊上方按鈕獲得AI協助！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部聊天區域 -->
+    <div class="chat-section" id="chatSection">
+        <div class="chat-header">
+            <span><i class="fas fa-comments"></i> 協作聊天</span>
+            <button class="chat-toggle" onclick="toggleChat()">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message">
+                <strong>系統：</strong>歡迎來到協作聊天室！在這裡與夥伴討論代碼。
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="chatInput" 
+                placeholder="輸入消息與夥伴討論..." 
+                onkeypress="handleChatKeyPress(event)"
+            >
+            <button class="chat-send" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 全局變數
+        let isConnected = false;
+        let currentUser = '';
+        let currentRoom = '';
+        let lastKnownVersion = 0;
+        let lastChatId = 0;
+        let syncInterval = null;
+        let isUpdatingFromServer = false;
+        let lastSentCode = '';
+        
+        // DOM 元素
+        const connectBtn = document.getElementById('connectBtn');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const codeEditor = document.getElementById('codeEditor');
+        const userIndicators = document.getElementById('userIndicators');
+        const syncIndicator = document.getElementById('syncIndicator');
+        const syncText = document.getElementById('syncText');
+        const aiResponse = document.getElementById('aiResponse');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 生成隨機用戶名
+            const randomNames = ['學習者A', '編程者B', 'Python新手', '代碼探索者', '協作夥伴'];
+            document.getElementById('userName').value = randomNames[Math.floor(Math.random() * randomNames.length)] + Math.floor(Math.random() * 100);
+            
+            // 監聽代碼編輯器變化
+            codeEditor.addEventListener('input', handleCodeChange);
+            
+            console.log('🚀 雙人協作平台初始化完成');
+        });
+        
+        // 連接/斷開協作
+        function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+        
+        // 連接協作
+        function connect() {
+            const roomCode = document.getElementById('roomCode').value.trim();
+            const userName = document.getElementById('userName').value.trim();
+            
+            if (!roomCode || !userName) {
+                alert('請輸入房間號和用戶名！');
+                return;
+            }
+            
+            currentRoom = roomCode;
+            currentUser = userName;
+            
+            // 重置狀態
+            lastKnownVersion = 0;
+            lastChatId = 0;  // 重置聊天ID追蹤
+            
+            // 更新UI狀態
+            isConnected = true;
+            connectBtn.className = 'btn connected';
+            connectBtn.innerHTML = '<i class="fas fa-unlink"></i><span>斷開連接</span>';
+            statusDot.className = 'status-dot connected';
+            statusText.textContent = '已連接';
+            
+            // 開始同步
+            startSync();
+            
+            // 發送加入事件
+            sendUpdate('user_join', {});
+            
+            showNotification('✅ 成功連接到協作房間: ' + roomCode, 'success');
+            addChatMessage('系統', `${userName} 加入了協作房間`, 'system');
+            
+            console.log(`🔗 用戶 ${userName} 連接到房間 ${roomCode}, lastChatId 重置為 0`);
+        }
+        
+        // 斷開連接
+        function disconnect() {
+            // 發送離開事件
+            if (isConnected) {
+                sendUpdate('user_leave', {});
+            }
+            
+            // 停止同步
+            stopSync();
+            
+            // 更新UI狀態
+            isConnected = false;
+            connectBtn.className = 'btn disconnected';
+            connectBtn.innerHTML = '<i class="fas fa-plug"></i><span>連接協作</span>';
+            statusDot.className = 'status-dot';
+            statusText.textContent = '未連接';
+            syncIndicator.className = 'sync-indicator';
+            syncText.textContent = '未同步';
+            
+            // 清空用戶指示器
+            userIndicators.innerHTML = '';
+            
+            showNotification('❌ 已斷開協作連接', 'info');
+            addChatMessage('系統', `${currentUser} 離開了協作房間`, 'system');
+            
+            console.log('🔌 協作連接已斷開');
+        }
+        
+        // 開始同步
+        function startSync() {
+            stopSync(); // 先停止現有的同步
+            syncInterval = setInterval(getUpdates, 2000); // 每2秒檢查更新
+            getUpdates(); // 立即獲取一次更新
+        }
+        
+        // 停止同步
+        function stopSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+            }
+        }
+        
+        // 獲取更新
+        async function getUpdates() {
+            if (!isConnected) return;
+
+            console.log(`[getUpdates] 即將發送請求，當前 lastChatId: ${lastChatId} (類型: ${typeof lastChatId})`);
+            
+            try {
+                const requestBody = {
+                    action: 'get_updates',
+                    room: currentRoom,
+                    userId: currentUser,
+                    userName: currentUser,
+                    lastVersion: lastKnownVersion,
+                    lastChatId: lastChatId
+                };
+                console.log('[getUpdates] Request body:', JSON.stringify(requestBody));
+
+                const response = await fetch('code_sync_handler.php?action=get_updates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    let errorText = `HTTP error! status: ${response.status} (${response.statusText})`;
+                    try {
+                        const errorBody = await response.text(); 
+                        console.error('Raw error body:', errorBody); // Log the raw error body
+                        errorText += ` - Server response: ${errorBody}`;
+                    } catch (e) {
+                        console.error('Failed to read error body:', e);
+                        errorText += ' (Could not read error body)';
+                    }
+                    throw new Error(errorText);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.updates) {
+                    // 只在有實際更新時才打印詳細日誌
+                    if (data.updates.length > 0) {
+                        const updateTypes = data.updates.map(u => u.type).join(', ');
+                        console.log(`📥 獲取更新成功: ${data.updates.length} 條更新 [${updateTypes}], lastChatId: ${lastChatId}`);
+                        
+                        // 詳細記錄每種更新類型的數量
+                        const updateCounts = {};
+                        data.updates.forEach(u => {
+                            updateCounts[u.type] = (updateCounts[u.type] || 0) + 1;
+                        });
+                        console.log('📊 更新詳情:', updateCounts);
+                    }
+                    
+                    processUpdates(data.updates);
+                    lastKnownVersion = data.latestVersion || lastKnownVersion;
+                    
+                    // 更新同步狀態
+                    syncIndicator.className = 'sync-indicator';
+                    syncText.textContent = `已同步 v${lastKnownVersion}`;
+                }
+                
+            } catch (error) {
+                console.error('❌ 獲取更新失敗:', error);
+                syncIndicator.className = 'sync-indicator error';
+                syncText.textContent = '同步錯誤';
+            }
+        }
+        
+        // 處理更新
+        function processUpdates(updates) {
+            if (updates.length === 0) return; // 如果沒有更新就直接返回，不打印日誌
+            
+            console.log(`📥 開始處理 ${updates.length} 條更新, 當前 lastChatId: ${lastChatId}`);
+            
+            updates.forEach((update, index) => {
+                switch (update.type) {
+                    case 'code_change':
+                        if (update.userId !== currentUser) {
+                            console.log(`📝 收到代碼更新 (來自 ${update.userName})`);
+                            updateCodeFromServer(update.data.code, update.userName);
+                        }
+                        break;
+                        
+                    case 'active_users_list':
+                        console.log(`👥 更新用戶列表: ${update.data.length} 位用戶在線`);
+                        updateUserIndicators(update.data);
+                        break;
+                        
+                    case 'chat_message':
+                        console.log(`💬 處理聊天消息: chatId=${update.data.chatId}, 發送者=${update.userName}`);
+                        
+                        // 只處理不是自己發送的消息
+                        if (update.userId !== currentUser) {
+                            console.log(`📨 顯示他人消息: ${update.data.message}`);
+                            addChatMessage(update.userName, update.data.message, 'other');
+                        } else {
+                            console.log(`📤 跳過自己的消息`);
+                        }
+                        
+                        // 更新最後聊天ID（無論是誰發送的都要更新）
+                        if (update.data && update.data.chatId) {
+                            const newChatId = parseInt(update.data.chatId);
+                            if (newChatId > lastChatId) {
+                                lastChatId = newChatId;
+                                console.log(`📊 lastChatId 更新至: ${lastChatId}`);
+                            }
+                        }
+                        break;
+                        
+                    default:
+                        console.log(`❓ 未知更新類型: ${update.type}`);
+                }
+            });
+        }
+        
+        // 從服務器更新代碼
+        function updateCodeFromServer(newCode, userName) {
+            const currentCode = codeEditor.value;
+            
+            if (currentCode !== newCode) {
+                isUpdatingFromServer = true;
+                
+                // 檢查是否有衝突
+                if (currentCode !== lastSentCode && lastSentCode !== '') {
+                    showConflictWarning(userName);
+                }
+                
+                codeEditor.value = newCode;
+                lastSentCode = newCode;
+                isUpdatingFromServer = false;
+                
+                console.log(`📝 代碼已從 ${userName} 更新`);
+            }
+        }
+        
+        // 顯示衝突警告
+        function showConflictWarning(userName) {
+            const warning = document.createElement('div');
+            warning.className = 'conflict-warning';
+            warning.innerHTML = `⚠️ 檢測到與 ${userName} 的代碼衝突！`;
+            document.body.appendChild(warning);
+            
+            setTimeout(() => {
+                if (warning.parentNode) {
+                    warning.parentNode.removeChild(warning);
+                }
+            }, 3000);
+        }
+        
+        // 處理代碼變化
+        function handleCodeChange() {
+            if (isUpdatingFromServer || !isConnected) return;
+            
+            const currentCode = codeEditor.value;
+            
+            // 防抖處理，避免過於頻繁的更新
+            clearTimeout(window.codeChangeTimeout);
+            window.codeChangeTimeout = setTimeout(() => {
+                sendCodeUpdate(currentCode);
+            }, 1000);
+            
+            // 更新同步狀態為正在同步
+            syncIndicator.className = 'sync-indicator syncing';
+            syncText.textContent = '正在同步...';
+        }
+        
+        // 發送代碼更新
+        async function sendCodeUpdate(code) {
+            if (!isConnected) return;
+            
+            try {
+                lastSentCode = code;
+                await sendUpdate('code_change', {
+                    code: code,
+                    version: lastKnownVersion + 1
+                });
+                console.log('📤 代碼更新已發送');
+            } catch (error) {
+                console.error('❌ 發送代碼更新失敗:', error);
+            }
+        }
+        
+        // 發送更新
+        async function sendUpdate(type, data) {
+            if (!isConnected) return;
+            
+            try {
+                const response = await fetch('code_sync_handler.php?action=send_update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'send_update',
+                        room: currentRoom,
+                        userId: currentUser,
+                        userName: currentUser,
+                        type: type,
+                        data: data
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.newVersion) {
+                    lastKnownVersion = result.newVersion;
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error('❌ 發送更新失敗:', error);
+                throw error;
+            }
+        }
+        
+        // 更新用戶指示器
+        function updateUserIndicators(users) {
+            userIndicators.innerHTML = '';
+            
+            users.forEach(user => {
+                const badge = document.createElement('div');
+                badge.className = 'user-badge';
+                if (user.userId === currentUser) {
+                    badge.classList.add('active');
+                }
+                badge.innerHTML = `
+                    <i class="fas fa-user"></i>
+                    <span>${user.userName}</span>
+                `;
+                userIndicators.appendChild(badge);
+            });
+        }
+        
+        // AI助教功能
+        async function askAI(action) {
+            const code = codeEditor.value.trim();
+            
+            if (!code) {
+                alert('請先輸入一些代碼！');
+                return;
+            }
+            
+            // 顯示加載狀態
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'ai-message loading';
+            loadingMessage.innerHTML = `
+                <div class="loading-spinner"></div>
+                <span>AI助教正在分析您的代碼...</span>
+            `;
+            aiResponse.appendChild(loadingMessage);
+            aiResponse.scrollTop = aiResponse.scrollHeight;
+            
+            try {
+                const response = await fetch('ai_api_handler.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        code: code,
+                        user_id: currentUser,
+                        room: currentRoom
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // 移除加載消息
+                aiResponse.removeChild(loadingMessage);
+                
+                if (data.success) {
+                    // 顯示AI回應
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'ai-message';
+                    aiMessage.innerHTML = marked.parse(data.response);
+                    
+                    // 高亮代碼塊
+                    const codeBlocks = aiMessage.querySelectorAll('pre code');
+                    codeBlocks.forEach(block => {
+                        hljs.highlightElement(block);
+                    });
+                    
+                    aiResponse.appendChild(aiMessage);
+                    aiResponse.scrollTop = aiResponse.scrollHeight;
+                    
+                    console.log(`🤖 AI助教回應 (${action}):`, data.response.substring(0, 100) + '...');
+                } else {
+                    throw new Error(data.error || 'AI請求失敗');
+                }
+                
+            } catch (error) {
+                // 移除加載消息
+                if (loadingMessage.parentNode) {
+                    aiResponse.removeChild(loadingMessage);
+                }
+                
+                // 顯示錯誤消息
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'ai-message';
+                errorMessage.style.borderLeftColor = '#f44336';
+                errorMessage.innerHTML = `
+                    <h4>❌ AI助教暫時無法回應</h4>
+                    <p>錯誤信息: ${error.message}</p>
+                    <p>請稍後再試，或檢查網路連接。</p>
+                `;
+                aiResponse.appendChild(errorMessage);
+                aiResponse.scrollTop = aiResponse.scrollHeight;
+                
+                console.error('❌ AI請求失敗:', error);
+            }
+        }
+        
+        // 聊天功能
+        function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) {
+                showNotification('⚠️ 請輸入聊天內容', 'info');
+                return;
+            }
+            
+            if (!isConnected) {
+                showNotification('⚠️ 請先連接協作房間', 'info');
+                return;
+            }
+            
+            // 顯示自己的消息
+            addChatMessage(currentUser, message, 'own');
+            
+            // 發送給其他用戶通過後端API
+            sendChatUpdate(message);
+            
+            chatInput.value = '';
+        }
+        
+        // 發送聊天消息到後端
+        async function sendChatUpdate(message) {
+            try {
+                const response = await sendUpdate('chat_message', {
+                    message: message,
+                    timestamp: Date.now()
+                });
+                
+                console.log(`📤 聊天消息發送成功: ${message}`);
+                
+                // 如果服務器返回chatId，更新lastChatId
+                if (response && response.chatId) {
+                    const newChatId = parseInt(response.chatId);
+                    if (newChatId > lastChatId) {
+                        lastChatId = newChatId;
+                        console.log(`📊 發送後更新 lastChatId: ${lastChatId}`);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ 聊天消息發送失敗:', error);
+                showNotification('❌ 聊天消息發送失敗', 'error');
+            }
+        }
+        
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+        
+        function addChatMessage(userName, message, type = 'other') {
+            const messageEl = document.createElement('div');
+            messageEl.className = `chat-message ${type}`;
+            
+            if (type === 'system') {
+                messageEl.innerHTML = `<strong>系統:</strong> ${message}`;
+                messageEl.style.background = '#555';
+                messageEl.style.color = '#bbb';
+            } else if (type === 'own') {
+                messageEl.innerHTML = message;
+            } else {
+                messageEl.innerHTML = `<strong>${userName}:</strong> ${message}`;
+            }
+            
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 切換聊天面板
+        function toggleChat() {
+            const chatSection = document.getElementById('chatSection');
+            const isCollapsed = chatSection.style.height === '40px';
+            
+            if (isCollapsed) {
+                chatSection.style.height = '200px';
+            } else {
+                chatSection.style.height = '40px';
+            }
+        }
+        
+        // 工具函數
+        function copyCode() {
+            codeEditor.select();
+            document.execCommand('copy');
+            showNotification('📋 代碼已複製到剪貼板', 'success');
+        }
+        
+        function clearCode() {
+            if (confirm('確定要清空所有代碼嗎？')) {
+                codeEditor.value = '';
+                if (isConnected) {
+                    sendCodeUpdate('');
+                }
+            }
+        }
+        
+        function resetCode() {
+            const initialCode = `# 測試指南：
+# 1. 兩人同時連接到相同房間
+# 2. 一起編輯這段代碼
+# 3. 觀察即時同步效果
+# 4. 故意在同一行進行修改來測試衝突處理
+
+def hello_collaboration():
+    print('歡迎來到雙人協作編程！')
+    # 在這裡添加你的代碼
+    pass
+
+if __name__ == '__main__':
+    hello_collaboration()`;
+    
+            codeEditor.value = initialCode;
+            if (isConnected) {
+                sendCodeUpdate(initialCode);
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            // 創建通知元素
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+        
+        // 事件監聽器
+        connectBtn.addEventListener('click', toggleConnection);
+        
+        // 頁面關閉時自動斷開連接
+        window.addEventListener('beforeunload', () => {
+            if (isConnected) {
+                disconnect();
+            }
+        });
+    </script>
+    
+    <style>
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+    </style>
+</body>
+</html> 

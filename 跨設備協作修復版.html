@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 跨設備協作修復版 - Python 教學平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        
+        .status-bar {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin: 5px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online { background: #28a745; }
+        .status-syncing { background: #ffc107; }
+        .status-offline { background: #dc3545; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            height: calc(100vh - 200px);
+        }
+        
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .editor-toolbar {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        
+        .editor-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+        }
+        
+        .remote-cursor {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .cursor-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+        
+        .sidebar-section {
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .sidebar-header {
+            background: #e9ecef;
+            padding: 12px 15px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .sidebar-content {
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .activity-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 13px;
+        }
+        
+        .activity-time {
+            color: #6c757d;
+            font-size: 11px;
+        }
+        
+        .activity-user {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .activity-action {
+            color: #495057;
+        }
+        
+        .sync-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        
+        .sync-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            
+            .sidebar {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 跨設備協作修復版</h1>
+            <p>使用 HTTP 輪詢實現真正的跨設備同步</p>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-dot status-online" id="connection-status"></div>
+                <span id="connection-text">連接中...</span>
+            </div>
+            <div class="status-item">
+                <span>房間: <strong id="room-display">dual-test-v3</strong></span>
+            </div>
+            <div class="status-item">
+                <span>用戶: <strong id="user-display">載入中...</strong></span>
+            </div>
+            <div class="status-item">
+                <span>同步延遲: <strong id="sync-latency">檢測中...</strong></span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="editor-toolbar">
+                    <button class="btn btn-success" onclick="runCode()">
+                        ▶️ 執行代碼
+                    </button>
+                    <button class="btn" onclick="saveCode()">
+                        💾 保存
+                    </button>
+                    <button class="btn btn-warning" onclick="clearCode()">
+                        🗑️ 清空
+                    </button>
+                    <button class="btn" onclick="exportCode()">
+                        📤 導出
+                    </button>
+                    <span style="margin-left: auto; font-size: 12px; color: #6c757d;">
+                        版本: <span id="code-version">1</span> | 
+                        最後同步: <span id="last-sync">剛剛</span>
+                    </span>
+                </div>
+                <div class="editor-container">
+                    <textarea id="code-editor"></textarea>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-header">
+                        👥 在線用戶 (<span id="users-count">1</span>)
+                    </div>
+                    <div class="sidebar-content" id="users-list">
+                        <!-- 用戶列表將動態生成 -->
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-header">
+                        📊 同步統計
+                    </div>
+                    <div class="sidebar-content">
+                        <div class="sync-info">
+                            <div>🔄 HTTP 輪詢同步</div>
+                            <div>📡 每 <span id="poll-interval">2</span> 秒檢查更新</div>
+                            <div class="sync-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="sync-count">0</div>
+                                    <div class="stat-label">同步次數</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="avg-latency">0ms</div>
+                                    <div class="stat-label">平均延遲</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section" style="flex: 1;">
+                    <div class="sidebar-header">
+                        📝 協作活動
+                    </div>
+                    <div class="sidebar-content" id="activity-list" style="max-height: none; height: 100%;">
+                        <!-- 活動記錄將動態生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script>
+        // 全局變量
+        let editor;
+        let currentRoom = 'dual-test-v3';
+        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        let userName = '用戶' + Math.floor(Math.random() * 999 + 1);
+        let currentVersion = 0;
+        let lastSyncTime = Date.now();
+        let syncCount = 0;
+        let latencyHistory = [];
+        let isUpdatingFromRemote = false;
+        let pollInterval = 2000; // 2秒輪詢間隔
+        let pollTimer;
+        
+        // HTTP 輪詢同步類
+        class HttpPollingSync {
+            constructor(roomId, userId, userName) {
+                this.roomId = roomId;
+                this.userId = userId;
+                this.userName = userName;
+                this.lastVersion = 0;
+                this.pollInterval = 2000;
+                this.isPolling = false;
+                this.startPolling();
+            }
+            
+            async startPolling() {
+                if (this.isPolling) return;
+                this.isPolling = true;
+                
+                const poll = async () => {
+                    try {
+                        await this.checkForUpdates();
+                    } catch (error) {
+                        console.error('輪詢錯誤:', error);
+                        updateConnectionStatus('offline', '同步失敗');
+                    }
+                    
+                    if (this.isPolling) {
+                        setTimeout(poll, this.pollInterval);
+                    }
+                };
+                
+                poll();
+                updateConnectionStatus('online', '同步正常');
+            }
+            
+            stopPolling() {
+                this.isPolling = false;
+            }
+            
+            async checkForUpdates() {
+                const startTime = Date.now();
+                
+                try {
+                    const response = await fetch('code_sync_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'get_updates',
+                            room: this.roomId,
+                            lastVersion: this.lastVersion,
+                            userId: this.userId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const latency = Date.now() - startTime;
+                    
+                    if (data.success && data.updates) {
+                        for (const update of data.updates) {
+                            this.handleUpdate(update);
+                        }
+                        
+                        if (data.latestVersion > this.lastVersion) {
+                            this.lastVersion = data.latestVersion;
+                        }
+                    }
+                    
+                    // 更新延遲統計
+                    this.recordLatency(latency);
+                    updateSyncStats(latency);
+                    
+                } catch (error) {
+                    console.error('檢查更新失敗:', error);
+                    throw error;
+                }
+            }
+            
+            async sendUpdate(type, data) {
+                try {
+                    const response = await fetch('code_sync_handler.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'send_update',
+                            room: this.roomId,
+                            userId: this.userId,
+                            userName: this.userName,
+                            type: type,
+                            data: data,
+                            timestamp: Date.now()
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('✅ 更新發送成功:', type);
+                    } else {
+                        console.error('❌ 更新發送失敗:', result.error);
+                    }
+                    
+                } catch (error) {
+                    console.error('發送更新失敗:', error);
+                }
+            }
+            
+            handleUpdate(update) {
+                if (update.userId === this.userId) return; // 忽略自己的更新
+                
+                switch (update.type) {
+                    case 'code_change':
+                        this.applyCodeChange(update);
+                        break;
+                    case 'cursor_change':
+                        this.applyCursorChange(update);
+                        break;
+                    case 'user_join':
+                        this.handleUserJoin(update);
+                        break;
+                    case 'user_leave':
+                        this.handleUserLeave(update);
+                        break;
+                }
+            }
+            
+            applyCodeChange(update) {
+                if (update.data.code && update.data.version > currentVersion) {
+                    isUpdatingFromRemote = true;
+                    editor.setValue(update.data.code);
+                    currentVersion = update.data.version;
+                    isUpdatingFromRemote = false;
+                    
+                    addActivity(update.userName, '同步了代碼變更', 'edit');
+                    updateCodeVersion(currentVersion);
+                }
+            }
+            
+            applyCursorChange(update) {
+                updateRemoteCursor(update.userId, update.userName, update.data.cursor);
+            }
+            
+            handleUserJoin(update) {
+                addUser(update.userId, update.userName);
+                addActivity(update.userName, '加入了協作', 'system');
+            }
+            
+            handleUserLeave(update) {
+                removeUser(update.userId);
+                addActivity(update.userName, '離開了協作', 'system');
+            }
+            
+            recordLatency(latency) {
+                latencyHistory.push(latency);
+                if (latencyHistory.length > 10) {
+                    latencyHistory.shift();
+                }
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initEditor();
+            initSync();
+            updateUserDisplay();
+            addActivity('系統', '協作環境初始化完成', 'system');
+        });
+        
+        function initEditor() {
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                lineWrapping: true,
+                extraKeys: {
+                    "Tab": function(cm) {
+                        cm.replaceSelection("    ", "end");
+                    }
+                }
+            });
+            
+            // 初始代碼
+            const initialCode = `# 🌐 跨設備協作修復版 - Python 教學平台
+# 使用 HTTP 輪詢實現真正的跨設備同步
+
+def cross_device_collaboration():
+    """跨設備協作演示函數"""
+    print("🎉 歡迎使用跨設備協作功能！")
+    
+    devices = ["桌電", "筆電", "平板", "手機"]
+    
+    for device in devices:
+        print(f"📱 {device} 可以即時同步編輯")
+    
+    return "協作無界限！"
+
+# 測試協作功能
+if __name__ == "__main__":
+    result = cross_device_collaboration()
+    print(f"\\n✨ {result}")
+    
+    # 計算簡單的數學運算
+    numbers = [1, 2, 3, 4, 5]
+    total = sum(numbers)
+    average = total / len(numbers)
+    
+    print(f"\\n📊 數據統計:")
+    print(f"   總和: {total}")
+    print(f"   平均: {average}")
+    
+# 💡 提示：在不同設備上修改這段代碼，觀察即時同步效果！`;
+            
+            editor.setValue(initialCode);
+            
+            // 監聽編輯器變化
+            editor.on('change', function(cm, change) {
+                if (!isUpdatingFromRemote && change.origin !== 'setValue') {
+                    handleCodeChange();
+                }
+            });
+            
+            // 監聽游標變化
+            editor.on('cursorActivity', function(cm) {
+                if (!isUpdatingFromRemote) {
+                    handleCursorChange();
+                }
+            });
+        }
+        
+        function initSync() {
+            // 初始化 HTTP 輪詢同步
+            window.syncManager = new HttpPollingSync(currentRoom, userId, userName);
+            
+            // 發送用戶加入事件
+            setTimeout(() => {
+                window.syncManager.sendUpdate('user_join', {
+                    userName: userName,
+                    timestamp: Date.now()
+                });
+            }, 1000);
+        }
+        
+        function handleCodeChange() {
+            const code = editor.getValue();
+            currentVersion++;
+            
+            // 發送代碼變更
+            window.syncManager.sendUpdate('code_change', {
+                code: code,
+                version: currentVersion,
+                timestamp: Date.now()
+            });
+            
+            syncCount++;
+            updateCodeVersion(currentVersion);
+            addActivity(userName, '編輯了代碼', 'edit');
+        }
+        
+        function handleCursorChange() {
+            const cursor = editor.getCursor();
+            
+            // 發送游標變更
+            window.syncManager.sendUpdate('cursor_change', {
+                cursor: cursor,
+                timestamp: Date.now()
+            });
+        }
+        
+        // UI 更新函數
+        function updateUserDisplay() {
+            document.getElementById('user-display').textContent = userName;
+            document.getElementById('room-display').textContent = currentRoom;
+        }
+        
+        function updateConnectionStatus(status, message) {
+            const statusDot = document.getElementById('connection-status');
+            const statusText = document.getElementById('connection-text');
+            
+            statusDot.className = `status-dot status-${status}`;
+            statusText.textContent = message;
+        }
+        
+        function updateSyncStats(latency) {
+            document.getElementById('sync-count').textContent = syncCount;
+            document.getElementById('sync-latency').textContent = `${latency}ms`;
+            
+            if (latencyHistory.length > 0) {
+                const avgLatency = Math.round(latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length);
+                document.getElementById('avg-latency').textContent = `${avgLatency}ms`;
+            }
+            
+            document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
+        }
+        
+        function updateCodeVersion(version) {
+            document.getElementById('code-version').textContent = version;
+        }
+        
+        function addUser(userId, userName) {
+            const usersList = document.getElementById('users-list');
+            const existingUser = document.getElementById(`user-${userId}`);
+            
+            if (!existingUser) {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.id = `user-${userId}`;
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'user-avatar';
+                avatar.style.backgroundColor = getRandomColor();
+                avatar.textContent = userName.charAt(0);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = userName;
+                
+                userItem.appendChild(avatar);
+                userItem.appendChild(nameSpan);
+                usersList.appendChild(userItem);
+                
+                updateUsersCount();
+            }
+        }
+        
+        function removeUser(userId) {
+            const userItem = document.getElementById(`user-${userId}`);
+            if (userItem) {
+                userItem.remove();
+                updateUsersCount();
+            }
+            
+            // 移除游標
+            const cursor = document.getElementById(`cursor-${userId}`);
+            if (cursor) {
+                cursor.remove();
+            }
+        }
+        
+        function updateUsersCount() {
+            const count = document.getElementById('users-list').children.length;
+            document.getElementById('users-count').textContent = count;
+        }
+        
+        function updateRemoteCursor(userId, userName, cursor) {
+            // 實現遠程游標顯示
+            let cursorElement = document.getElementById(`cursor-${userId}`);
+            
+            if (!cursorElement) {
+                cursorElement = document.createElement('div');
+                cursorElement.id = `cursor-${userId}`;
+                cursorElement.className = 'remote-cursor';
+                cursorElement.style.backgroundColor = getRandomColor();
+                
+                const label = document.createElement('div');
+                label.className = 'cursor-label';
+                label.style.backgroundColor = cursorElement.style.backgroundColor;
+                label.textContent = userName;
+                
+                cursorElement.appendChild(label);
+                document.querySelector('.CodeMirror').appendChild(cursorElement);
+            }
+            
+            // 更新游標位置
+            const coords = editor.cursorCoords(cursor, 'local');
+            cursorElement.style.left = coords.left + 'px';
+            cursorElement.style.top = coords.top + 'px';
+        }
+        
+        function addActivity(user, action, type) {
+            const activityList = document.getElementById('activity-list');
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            
+            const time = new Date().toLocaleTimeString();
+            activityItem.innerHTML = `
+                <div class="activity-time">${time}</div>
+                <div>
+                    <span class="activity-user">${user}</span>
+                    <span class="activity-action">${action}</span>
+                </div>
+            `;
+            
+            activityList.insertBefore(activityItem, activityList.firstChild);
+            
+            // 限制活動記錄數量
+            while (activityList.children.length > 20) {
+                activityList.removeChild(activityList.lastChild);
+            }
+        }
+        
+        function getRandomColor() {
+            const colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6f42c1', '#e83e8c', '#fd7e14'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // 工具欄功能
+        function runCode() {
+            const code = editor.getValue();
+            addActivity(userName, '執行了代碼', 'run');
+            alert('代碼執行功能需要後端支援\n\n當前代碼:\n' + code.substring(0, 200) + '...');
+        }
+        
+        function saveCode() {
+            const code = editor.getValue();
+            localStorage.setItem(`room_${currentRoom}_code`, code);
+            addActivity(userName, '保存了代碼', 'save');
+            alert('✅ 代碼已保存到本地存儲');
+        }
+        
+        function clearCode() {
+            if (confirm('確定要清空所有代碼嗎？')) {
+                editor.setValue('# 代碼已清空\n\n');
+                addActivity(userName, '清空了代碼', 'clear');
+            }
+        }
+        
+        function exportCode() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `collaboration_${currentRoom}_${Date.now()}.py`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addActivity(userName, '導出了代碼', 'export');
+        }
+        
+        // 頁面卸載時清理
+        window.addEventListener('beforeunload', function() {
+            if (window.syncManager) {
+                window.syncManager.sendUpdate('user_leave', {
+                    userName: userName,
+                    timestamp: Date.now()
+                });
+                window.syncManager.stopPolling();
+            }
+        });
+    </script>
+</body>
+</html> 

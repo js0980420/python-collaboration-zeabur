@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Python 課程內容 - Python 程式設計教學網站{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold">Python 程式設計課程</h1>
+                <p class="lead text-muted">
+                    系統化的Python學習課程，從基礎到進階，助您成為Python高手
+                </p>
+            </div>
+
+            <!-- 課程1: Python基礎介紹 -->
+            <div class="lesson-card">
+                <div class="lesson-number">1</div>
+                <h3>Python 基礎介紹</h3>
+                <p class="text-muted mb-4">了解Python語言的特色與優勢，設置開發環境</p>
+                
+                <h5>什麼是Python？</h5>
+                <p>Python是一種高級程式語言，以其簡潔易讀的語法而聞名。它是目前最受歡迎的程式語言之一，廣泛應用於：</p>
+                <ul>
+                    <li>網頁開發</li>
+                    <li>數據分析</li>
+                    <li>人工智慧</li>
+                    <li>自動化腳本</li>
+                    <li>科學計算</li>
+                </ul>
+
+                <h5>第一個Python程式</h5>
+                <p>讓我們從最經典的"Hello World"開始：</p>
+                <pre><code class="language-python"># 這是註解
+print("Hello, World!")
+print("歡迎來到Python的世界！")</code></pre>
+
+                <div class="alert alert-info-custom">
+                    <strong>小提示：</strong> 在Python中，# 符號用來寫註解，print() 函數用來輸出文字到螢幕上。
+                </div>
+            </div>
+
+            <!-- 課程2: 變數與資料型別 -->
+            <div class="lesson-card">
+                <div class="lesson-number">2</div>
+                <h3>變數與資料型別</h3>
+                <p class="text-muted mb-4">學習如何宣告變數和使用不同的資料型別</p>
+                
+                <h5>變數宣告</h5>
+                <p>在Python中，變數不需要特別宣告，直接賦值即可：</p>
+                <pre><code class="language-python"># 整數
+age = 25
+
+# 浮點數
+height = 175.5
+
+# 字串
+name = "小明"
+
+# 布林值
+is_student = True
+
+# 輸出變數
+print(f"姓名: {name}")
+print(f"年齡: {age}")
+print(f"身高: {height} 公分")
+print(f"是學生: {is_student}")</code></pre>
+
+                <h5>常用資料型別</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul>
+                            <li><strong>int</strong> - 整數</li>
+                            <li><strong>float</strong> - 浮點數</li>
+                            <li><strong>str</strong> - 字串</li>
+                            <li><strong>bool</strong> - 布林值</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li><strong>list</strong> - 列表</li>
+                            <li><strong>dict</strong> - 字典</li>
+                            <li><strong>tuple</strong> - 元組</li>
+                            <li><strong>set</strong> - 集合</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 課程3: 基本運算 -->
+            <div class="lesson-card">
+                <div class="lesson-number">3</div>
+                <h3>基本運算</h3>
+                <p class="text-muted mb-4">掌握Python中的數學運算和邏輯運算</p>
+                
+                <h5>數學運算</h5>
+                <pre><code class="language-python"># 基本數學運算
+a = 10
+b = 3
+
+print(f"加法: {a} + {b} = {a + b}")      # 13
+print(f"減法: {a} - {b} = {a - b}")      # 7
+print(f"乘法: {a} * {b} = {a * b}")      # 30
+print(f"除法: {a} / {b} = {a / b}")      # 3.333...
+print(f"整數除法: {a} // {b} = {a // b}")  # 3
+print(f"餘數: {a} % {b} = {a % b}")       # 1
+print(f"次方: {a} ** {b} = {a ** b}")     # 1000</code></pre>
+
+                <h5>比較運算</h5>
+                <pre><code class="language-python">x = 5
+y = 8
+
+print(f"{x} == {y}: {x == y}")    # False (等於)
+print(f"{x} != {y}: {x != y}")    # True (不等於)
+print(f"{x} < {y}: {x < y}")      # True (小於)
+print(f"{x} > {y}: {x > y}")      # False (大於)
+print(f"{x} <= {y}: {x <= y}")    # True (小於等於)
+print(f"{x} >= {y}: {x >= y}")    # False (大於等於)</code></pre>
+            </div>
+
+            <!-- 課程4: 條件判斷 -->
+            <div class="lesson-card">
+                <div class="lesson-number">4</div>
+                <h3>條件判斷 (if/elif/else)</h3>
+                <p class="text-muted mb-4">學習如何根據條件執行不同的程式碼</p>
+                
+                <h5>基本if語句</h5>
+                <pre><code class="language-python">score = 85
+
+if score >= 90:
+    print("優秀！")
+elif score >= 80:
+    print("良好！")
+elif score >= 70:
+    print("及格")
+else:
+    print("需要加油")
+
+# 輸出: 良好！</code></pre>
+
+                <h5>實際應用範例</h5>
+                <pre><code class="language-python"># 判斷年齡階段
+age = int(input("請輸入您的年齡: "))
+
+if age < 0:
+    print("年齡不能是負數")
+elif age <= 12:
+    print("您是兒童")
+elif age <= 17:
+    print("您是青少年")
+elif age <= 64:
+    print("您是成年人")
+else:
+    print("您是長者")
+
+# 多條件判斷
+weather = "晴天"
+temperature = 25
+
+if weather == "晴天" and temperature > 20:
+    print("今天適合出門！")
+elif weather == "雨天" or temperature < 10:
+    print("今天適合待在家裡")
+else:
+    print("天氣還可以")</code></pre>
+            </div>
+
+            <!-- 課程5: 迴圈 -->
+            <div class="lesson-card">
+                <div class="lesson-number">5</div>
+                <h3>迴圈 (for/while)</h3>
+                <p class="text-muted mb-4">學習如何重複執行程式碼</p>
+                
+                <h5>for 迴圈</h5>
+                <pre><code class="language-python"># 基本for迴圈
+for i in range(5):
+    print(f"第 {i+1} 次迴圈")
+
+# 迭代列表
+fruits = ["蘋果", "香蕉", "橘子"]
+for fruit in fruits:
+    print(f"我喜歡吃{fruit}")
+
+# 使用enumerate取得索引
+for index, fruit in enumerate(fruits):
+    print(f"{index + 1}. {fruit}")</code></pre>
+
+                <h5>while 迴圈</h5>
+                <pre><code class="language-python"># 基本while迴圈
+count = 0
+while count < 5:
+    print(f"計數: {count}")
+    count += 1
+
+# 實用範例：輸入驗證
+password = ""
+while password != "123456":
+    password = input("請輸入密碼: ")
+    if password != "123456":
+        print("密碼錯誤，請重新輸入")
+print("密碼正確！")</code></pre>
+            </div>
+
+            <!-- 課程6: 函數 -->
+            <div class="lesson-card">
+                <div class="lesson-number">6</div>
+                <h3>函數 (Functions)</h3>
+                <p class="text-muted mb-4">學習如何創建和使用函數來組織程式碼</p>
+                
+                <h5>定義與呼叫函數</h5>
+                <pre><code class="language-python"># 基本函數定義
+def greet(name):
+    """問候函數"""
+    return f"你好，{name}！"
+
+# 呼叫函數
+message = greet("小明")
+print(message)
+
+# 有預設參數的函數
+def introduce(name, age=20):
+    return f"我是{name}，今年{age}歲"
+
+print(introduce("小華"))        # 使用預設年齡
+print(introduce("小美", 25))    # 指定年齡</code></pre>
+
+                <h5>實用函數範例</h5>
+                <pre><code class="language-python"># 計算圓面積
+def circle_area(radius):
+    """計算圓的面積"""
+    pi = 3.14159
+    return pi * radius ** 2
+
+# 判斷是否為質數
+def is_prime(n):
+    """判斷一個數是否為質數"""
+    if n < 2:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+# 使用函數
+print(f"半徑5的圓面積: {circle_area(5):.2f}")
+print(f"17是質數嗎? {is_prime(17)}")
+print(f"18是質數嗎? {is_prime(18)}")</code></pre>
+            </div>
+
+            <!-- 課程7: 列表和字典 -->
+            <div class="lesson-card">
+                <div class="lesson-number">7</div>
+                <h3>列表與字典</h3>
+                <p class="text-muted mb-4">掌握Python中重要的數據結構</p>
+                
+                <h5>列表 (List)</h5>
+                <pre><code class="language-python"># 創建和操作列表
+numbers = [1, 2, 3, 4, 5]
+fruits = ["蘋果", "香蕉", "橘子"]
+
+# 添加元素
+fruits.append("葡萄")
+fruits.insert(1, "草莓")
+
+# 刪除元素
+fruits.remove("香蕉")
+last_fruit = fruits.pop()
+
+# 列表操作
+print(f"水果數量: {len(fruits)}")
+print(f"第一個水果: {fruits[0]}")
+print(f"最後一個水果: {fruits[-1]}")
+print(f"前兩個水果: {fruits[:2]}")
+
+# 列表理解 (List Comprehension)
+squares = [x**2 for x in range(1, 6)]
+print(f"平方數: {squares}")  # [1, 4, 9, 16, 25]</code></pre>
+
+                <h5>字典 (Dictionary)</h5>
+                <pre><code class="language-python"># 創建字典
+student = {
+    "name": "小明",
+    "age": 20,
+    "grade": "大二",
+    "subjects": ["數學", "物理", "化學"]
+}
+
+# 存取字典
+print(f"姓名: {student['name']}")
+print(f"年齡: {student.get('age', '未知')}")
+
+# 修改字典
+student["age"] = 21
+student["gpa"] = 3.8
+
+# 遍歷字典
+for key, value in student.items():
+    print(f"{key}: {value}")
+
+# 字典方法
+print(f"所有鍵: {list(student.keys())}")
+print(f"所有值: {list(student.values())}")</code></pre>
+            </div>
+
+            <!-- 下一步 -->
+            <div class="text-center mt-5">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('ai_tutor') }}" class="btn btn-primary-custom btn-custom btn-lg w-100">
+                            <i class="fas fa-robot me-2"></i>向AI助教提問
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('practice') }}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-code me-2"></i>開始練習程式碼
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

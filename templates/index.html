@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Python 程式設計教學網站 - 首頁{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        歡迎來到 Python 程式設計教學網站
+                    </h1>
+                    <p class="lead mb-4">
+                        從零開始學習Python程式設計，結合AI助教提供個人化學習體驗。
+                        無論您是完全初學者還是想要提升技能，我們都能幫助您達成目標。
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="{{ url_for('lessons') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-play me-2"></i>開始學習
+                        </a>
+                        <a href="{{ url_for('ai_tutor') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-robot me-2"></i>AI 助教
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="hero-image">
+                        <i class="fas fa-code" style="font-size: 15rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="h1 mb-4">為什麼選擇我們的教學平台？</h2>
+                <p class="lead text-muted">
+                    我們提供最完整的Python學習資源，結合現代化的教學方法和AI技術
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="card-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h5 class="card-title">系統化課程</h5>
+                        <p class="card-text">
+                            從基礎語法到進階應用，循序漸進的課程設計讓您穩步成長
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="card-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h5 class="card-title">AI 智能助教</h5>
+                        <p class="card-text">
+                            24小時在線的AI助教，隨時解答您的疑問，提供個人化指導
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="card-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h5 class="card-title">實作練習</h5>
+                        <p class="card-text">
+                            豐富的程式練習題目，在線編輯器讓您即學即用
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card card-custom h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="card-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h5 class="card-title">行動學習</h5>
+                        <p class="card-text">
+                            響應式設計，無論在電腦或手機上都能享受最佳學習體驗
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Start Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="h1 mb-4">立即開始您的 Python 學習之旅</h2>
+                <p class="lead mb-4">
+                    只需三個簡單步驟，就能開始學習Python程式設計：
+                </p>
+                
+                <div class="d-flex align-items-start mb-4">
+                    <div class="lesson-number me-3" style="width: 40px; height: 40px; font-size: 1rem;">1</div>
+                    <div>
+                        <h5>選擇課程</h5>
+                        <p class="text-muted mb-0">從基礎課程開始，或直接跳到您感興趣的主題</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-start mb-4">
+                    <div class="lesson-number me-3" style="width: 40px; height: 40px; font-size: 1rem;">2</div>
+                    <div>
+                        <h5>動手實作</h5>
+                        <p class="text-muted mb-0">使用我們的在線編輯器練習程式碼</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-start mb-4">
+                    <div class="lesson-number me-3" style="width: 40px; height: 40px; font-size: 1rem;">3</div>
+                    <div>
+                        <h5>AI 協助</h5>
+                        <p class="text-muted mb-0">遇到問題時向AI助教求助，獲得即時指導</p>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('lessons') }}" class="btn btn-primary-custom btn-custom btn-lg">
+                    <i class="fas fa-rocket me-2"></i>立即開始學習
+                </a>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="bg-white p-4 rounded shadow">
+                    <h6 class="text-muted mb-3">範例程式碼：</h6>
+                    <pre><code class="language-python"># 歡迎來到Python世界！
+def greet(name):
+    """簡單的問候函數"""
+    return f"你好，{name}！歡迎學習Python！"
+
+# 呼叫函數
+message = greet("同學")
+print(message)
+
+# 輸出：你好，同學！歡迎學習Python！</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-6 mb-4">
+                <div class="h2 fw-bold text-primary">50+</div>
+                <p class="text-muted">實用課程</p>
+            </div>
+            <div class="col-lg-3 col-6 mb-4">
+                <div class="h2 fw-bold text-primary">24/7</div>
+                <p class="text-muted">AI 助教服務</p>
+            </div>
+            <div class="col-lg-3 col-6 mb-4">
+                <div class="h2 fw-bold text-primary">100+</div>
+                <p class="text-muted">練習題目</p>
+            </div>
+            <div class="col-lg-3 col-6 mb-4">
+                <div class="h2 fw-bold text-primary">∞</div>
+                <p class="text-muted">學習可能</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="h1 mb-4">準備好開始您的程式設計之旅了嗎？</h2>
+                <p class="lead mb-4">
+                    加入我們的學習社群，開始探索Python的無限可能
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ url_for('lessons') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-book me-2"></i>瀏覽課程
+                    </a>
+                    <a href="{{ url_for('ai_tutor') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-comments me-2"></i>與AI對話
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

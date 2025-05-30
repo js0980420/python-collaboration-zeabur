@@ -1,0 +1,22 @@
+{
+  "name": "python-teaching/php-web",
+  "description": "Python教學網站 - PHP+MySQL版本",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^8.0",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "scripts": {
+    "serve": "php -S 0.0.0.0:8000",
+    "install-db": "mysql -u root -p < sql/schema.sql"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  }
+} 

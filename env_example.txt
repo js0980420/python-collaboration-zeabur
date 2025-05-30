@@ -1,0 +1,20 @@
+# Python協作教學平台 - 環境變量配置
+# 複製此文件為 .env 並填入您的實際配置
+
+# 數據庫配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=python_collaboration
+DB_USER=root
+DB_PASSWORD=
+
+# AI助教配置 (請前往相應平台申請API密鑰)
+OPENAI_API_KEY=您的OpenAI_API密鑰
+GROK_API_KEY=您的Grok_API密鑰
+
+# WebSocket服務器配置
+WEBSOCKET_PORT=8080
+
+# 安全配置
+JWT_SECRET=您的JWT密鑰
+SESSION_SECRET=您的會話密鑰 

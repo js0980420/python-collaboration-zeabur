@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Python協作教學平台 - 演示版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --dark-bg: #1e293b;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .demo-banner {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .feature-tabs {
+            background: var(--light-bg);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 25px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-pills .nav-link.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .code-editor-container {
+            background: #2d3748;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .editor-header {
+            background: #4a5568;
+            padding: 15px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .editor-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .editor-tab {
+            background: #2d3748;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px 8px 0 0;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .editor-tab.active {
+            background: #1a202c;
+        }
+
+        .CodeMirror {
+            height: 400px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .ai-panel {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .ai-suggestion {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .collaboration-panel {
+            background: var(--light-bg);
+            border-radius: 15px;
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .chat-message {
+            background: white;
+            border-radius: 15px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .feature-showcase {
+            padding: 40px 0;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .demo-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .demo-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 25px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 演示橫幅 -->
+    <div class="demo-banner">
+        <i class="fas fa-star"></i> 演示模式 - 完整功能展示，無API成本 <i class="fas fa-star"></i>
+    </div>
+
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- 標題區域 -->
+            <div class="header-section">
+                <h1><i class="fas fa-graduation-cap"></i> Python協作教學平台</h1>
+                <p class="lead">多人即時協作 × AI智能助手 × 學習分析</p>
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="activeUsers">8</div>
+                            <div>線上用戶</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="completedTasks">156</div>
+                            <div>完成任務</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="aiHelps">2.3K</div>
+                            <div>AI協助次數</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="codeScore">92</div>
+                            <div>平均分數</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能標籤 -->
+            <div class="feature-tabs p-3">
+                <ul class="nav nav-pills justify-content-center" id="featureTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="pill" href="#collaboration">
+                            <i class="fas fa-users"></i> 即時協作
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="pill" href="#ai-assistant">
+                            <i class="fas fa-robot"></i> AI助手
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="pill" href="#analytics">
+                            <i class="fas fa-chart-line"></i> 學習分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="pill" href="#management">
+                            <i class="fas fa-cog"></i> 後台管理
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 內容區域 -->
+            <div class="tab-content p-4">
+                <!-- 即時協作 -->
+                <div class="tab-pane fade show active" id="collaboration">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="code-editor-container">
+                                <div class="editor-header">
+                                    <div class="editor-tabs">
+                                        <button class="editor-tab active">main.py</button>
+                                        <button class="editor-tab">utils.py</button>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-wifi"></i> 已連線
+                                        </span>
+                                        <button class="btn btn-sm btn-outline-light" onclick="runCode()">
+                                            <i class="fas fa-play"></i> 執行
+                                        </button>
+                                    </div>
+                                </div>
+                                <textarea id="codeEditor"># 歡迎來到Python協作教學平台！
+# 多人可以同時編輯這個程式碼
+
+def calculate_average(numbers):
+    """計算數字列表的平均值"""
+    if not numbers:
+        return 0
+    return sum(numbers) / len(numbers)
+
+# 測試資料
+scores = [85, 92, 78, 96, 88]
+average = calculate_average(scores)
+
+print(f"學生分數: {scores}")
+print(f"平均分數: {average:.2f}")
+
+# TODO: 加入更多統計功能
+# 1. 計算最高分和最低分
+# 2. 計算標準差
+# 3. 顯示分數分布</textarea>
+                            </div>
+
+                            <!-- AI建議面板 -->
+                            <div class="ai-panel mt-3">
+                                <h5><i class="fas fa-lightbulb"></i> AI智能建議</h5>
+                                <div id="aiSuggestions">
+                                    <div class="ai-suggestion">
+                                        <strong>程式碼分析：</strong> 你的函數結構很好！建議加入錯誤處理機制。
+                                    </div>
+                                    <div class="ai-suggestion">
+                                        <strong>改進建議：</strong> 可以使用統計模組來計算標準差：<code>import statistics</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="collaboration-panel">
+                                <h5><i class="fas fa-users"></i> 協作成員 (4人)</h5>
+                                
+                                <!-- 成員列表 -->
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="user-avatar" style="background: #3b82f6;">A</div>
+                                        <div>
+                                            <strong>Alice</strong> <span class="badge bg-success">線上</span><br>
+                                            <small class="text-muted">正在編輯第15行</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="user-avatar" style="background: #10b981;">B</div>
+                                        <div>
+                                            <strong>Bob</strong> <span class="badge bg-warning">暫離</span><br>
+                                            <small class="text-muted">5分鐘前活動</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="user-avatar" style="background: #f59e0b;">C</div>
+                                        <div>
+                                            <strong>Carol</strong> <span class="badge bg-success">線上</span><br>
+                                            <small class="text-muted">正在查看文檔</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="user-avatar" style="background: #ef4444;">D</div>
+                                        <div>
+                                            <strong>David</strong> <span class="badge bg-success">線上</span><br>
+                                            <small class="text-muted">正在測試程式碼</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- 即時聊天 -->
+                                <h6><i class="fas fa-comments"></i> 團隊討論</h6>
+                                <div id="chatMessages" style="height: 200px; overflow-y: auto;">
+                                    <div class="chat-message">
+                                        <strong>Alice:</strong> 我們需要加入錯誤處理嗎？
+                                    </div>
+                                    <div class="chat-message">
+                                        <strong>Bob:</strong> 是的，空列表的情況需要處理
+                                    </div>
+                                    <div class="chat-message">
+                                        <strong>Carol:</strong> 我來加入標準差計算功能
+                                    </div>
+                                    <div class="chat-message">
+                                        <strong>AI助手:</strong> 建議使用try-except處理除零錯誤
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="輸入訊息..." id="chatInput">
+                                        <button class="btn btn-primary" onclick="sendMessage()">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI助手 -->
+                <div class="tab-pane fade" id="ai-assistant">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-robot"></i> AI功能展示</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <button class="btn btn-primary me-2" onclick="demoAI('analyze')">
+                                            <i class="fas fa-search"></i> 程式碼分析
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="demoAI('suggest')">
+                                            <i class="fas fa-lightbulb"></i> 智能建議
+                                        </button>
+                                        <button class="btn btn-warning me-2" onclick="demoAI('debug')">
+                                            <i class="fas fa-bug"></i> 錯誤調試
+                                        </button>
+                                        <button class="btn btn-info" onclick="demoAI('explain')">
+                                            <i class="fas fa-question-circle"></i> 概念解釋
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="aiResponse" class="alert alert-info" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="loading-spinner me-2"></div>
+                                            AI正在分析中...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-clock"></i> AI使用統計</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <h3 class="text-primary">47</h3>
+                                            <small>今日AI協助</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h3 class="text-success">94%</h3>
+                                            <small>問題解決率</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-history"></i> AI互動記錄</h5>
+                                </div>
+                                <div class="card-body" style="height: 400px; overflow-y: auto;">
+                                    <div class="ai-interaction mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <div class="user-avatar" style="background: #3b82f6;">U</div>
+                                            <div class="flex-grow-1">
+                                                <strong>學生問題：</strong> 為什麼我的迴圈沒有執行？
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-start mt-2">
+                                            <div class="user-avatar" style="background: #10b981;">AI</div>
+                                            <div class="flex-grow-1">
+                                                <strong>AI回答：</strong> 檢查你的縮排，Python使用縮排來定義程式碼區塊。
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="ai-interaction mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <div class="user-avatar" style="background: #3b82f6;">U</div>
+                                            <div class="flex-grow-1">
+                                                <strong>學生問題：</strong> 如何計算列表的平均值？
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-start mt-2">
+                                            <div class="user-avatar" style="background: #10b981;">AI</div>
+                                            <div class="flex-grow-1">
+                                                <strong>AI回答：</strong> 使用 sum(list) / len(list)，或者導入statistics模組使用mean()函數。
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 學習分析 -->
+                <div class="tab-pane fade" id="analytics">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-chart-line"></i> 學習進度分析</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="progressChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-bug"></i> 錯誤分析</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h3 class="text-danger">23</h3>
+                                                <small>語法錯誤</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h3 class="text-warning">15</h3>
+                                                <small>邏輯錯誤</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <h3 class="text-info">8</h3>
+                                                <small>執行錯誤</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-trophy"></i> 學習成就</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="achievement mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-medal text-warning fa-2x me-3"></i>
+                                            <div>
+                                                <strong>Python新手</strong><br>
+                                                <small>完成第一個程式</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="achievement mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-star text-primary fa-2x me-3"></i>
+                                            <div>
+                                                <strong>函數大師</strong><br>
+                                                <small>定義10個函數</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="achievement mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-users text-success fa-2x me-3"></i>
+                                            <div>
+                                                <strong>團隊合作</strong><br>
+                                                <small>參與協作專案</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-target"></i> 學習建議</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            加強迴圈練習
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            學習異常處理
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-clock text-warning"></i>
+                                            複習函數概念
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 後台管理 -->
+                <div class="tab-pane fade" id="management">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-users-cog"></i> 用戶管理</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>用戶</th>
+                                                    <th>狀態</th>
+                                                    <th>進度</th>
+                                                    <th>操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Alice Chen</td>
+                                                    <td><span class="badge bg-success">活躍</span></td>
+                                                    <td>85%</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">查看</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Bob Wang</td>
+                                                    <td><span class="badge bg-warning">暫停</span></td>
+                                                    <td>62%</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">查看</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Carol Liu</td>
+                                                    <td><span class="badge bg-success">活躍</span></td>
+                                                    <td>93%</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary">查看</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-server"></i> 系統狀態</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-3">
+                                            <h4 class="text-success">99.9%</h4>
+                                            <small>系統正常運行時間</small>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <h4 class="text-primary">156ms</h4>
+                                            <small>平均回應時間</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-info">2.1GB</h4>
+                                            <small>記憶體使用</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-warning">45%</h4>
+                                            <small>CPU使用率</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-bell"></i> 系統通知</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        新用戶註冊：3位新學生加入平台
+                                    </div>
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle"></i>
+                                        系統更新：AI模型已升級至v2.1
+                                    </div>
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        維護提醒：週日凌晨2點系統維護
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 演示控制按鈕 -->
+    <div class="demo-controls">
+        <button class="demo-btn" onclick="simulateCollaboration()" title="模擬協作">
+            <i class="fas fa-users"></i>
+        </button>
+        <button class="demo-btn" onclick="simulateAI()" title="模擬AI">
+            <i class="fas fa-robot"></i>
+        </button>
+        <button class="demo-btn" onclick="simulateTyping()" title="模擬打字">
+            <i class="fas fa-keyboard"></i>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // 初始化程式碼編輯器
+        let editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            lineWrapping: true
+        });
+
+        // 模擬即時協作
+        function simulateCollaboration() {
+            const users = ['Alice', 'Bob', 'Carol', 'David'];
+            const actions = ['正在編輯', '正在思考', '正在測試', '正在查看文檔'];
+            
+            users.forEach((user, index) => {
+                setTimeout(() => {
+                    const action = actions[Math.floor(Math.random() * actions.length)];
+                    updateUserStatus(user, action);
+                }, index * 1000);
+            });
+        }
+
+        // 更新用戶狀態
+        function updateUserStatus(user, action) {
+            // 這裡可以更新UI顯示用戶狀態
+            console.log(`${user} ${action}`);
+        }
+
+        // 模擬AI回應
+        function simulateAI() {
+            const responses = [
+                '你的程式碼結構很好！建議加入錯誤處理。',
+                '可以使用列表推導式簡化這段程式碼。',
+                '記得在函數中加入文檔字串說明功能。',
+                '這個邏輯可以用更Pythonic的方式實現。'
+            ];
+            
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            showAIResponse(response);
+        }
+
+        // 顯示AI回應
+        function showAIResponse(message) {
+            const aiPanel = document.getElementById('aiSuggestions');
+            const newSuggestion = document.createElement('div');
+            newSuggestion.className = 'ai-suggestion';
+            newSuggestion.innerHTML = `<strong>AI建議：</strong> ${message}`;
+            aiPanel.appendChild(newSuggestion);
+            
+            // 滾動到最新建議
+            newSuggestion.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 模擬打字效果
+        function simulateTyping() {
+            const code = `
+# 新增統計功能
+def calculate_statistics(numbers):
+    """計算詳細統計資訊"""
+    if not numbers:
+        return None
+    
+    stats = {
+        'mean': sum(numbers) / len(numbers),
+        'max': max(numbers),
+        'min': min(numbers),
+        'count': len(numbers)
+    }
+    return stats
+
+# 測試新功能
+stats = calculate_statistics(scores)
+print(f"統計結果: {stats}")`;
+
+            let i = 0;
+            const typeInterval = setInterval(() => {
+                if (i < code.length) {
+                    editor.setValue(editor.getValue() + code[i]);
+                    i++;
+                } else {
+                    clearInterval(typeInterval);
+                }
+            }, 50);
+        }
+
+        // 演示AI功能
+        function demoAI(type) {
+            const responseDiv = document.getElementById('aiResponse');
+            responseDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                let message = '';
+                switch(type) {
+                    case 'analyze':
+                        message = '程式碼分析完成！發現2個改進點，整體品質良好。';
+                        break;
+                    case 'suggest':
+                        message = '建議使用 statistics.mean() 來計算平均值，更加簡潔。';
+                        break;
+                    case 'debug':
+                        message = '發現潛在問題：空列表會導致除零錯誤，建議加入檢查。';
+                        break;
+                    case 'explain':
+                        message = '函數是可重複使用的程式碼區塊，可以接收參數並返回結果。';
+                        break;
+                }
+                
+                responseDiv.innerHTML = `<i class="fas fa-robot"></i> ${message}`;
+                responseDiv.className = 'alert alert-success';
+            }, 2000);
+        }
+
+        // 發送聊天訊息
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                const chatMessages = document.getElementById('chatMessages');
+                const newMessage = document.createElement('div');
+                newMessage.className = 'chat-message';
+                newMessage.innerHTML = `<strong>你:</strong> ${message}`;
+                chatMessages.appendChild(newMessage);
+                
+                input.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // 模擬AI回應
+                setTimeout(() => {
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'chat-message';
+                    aiMessage.innerHTML = `<strong>AI助手:</strong> 我理解你的問題，讓我來幫助你解決。`;
+                    chatMessages.appendChild(aiMessage);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1500);
+            }
+        }
+
+        // 執行程式碼
+        function runCode() {
+            const output = `學生分數: [85, 92, 78, 96, 88]
+平均分數: 87.80
+
+程式執行成功！ ✅`;
+            
+            alert(output);
+        }
+
+        // 初始化圖表
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['第1週', '第2週', '第3週', '第4週', '第5週', '第6週'],
+                    datasets: [{
+                        label: '學習進度',
+                        data: [20, 35, 50, 65, 80, 92],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // 動態更新統計數據
+        function updateStats() {
+            const stats = {
+                activeUsers: document.getElementById('activeUsers'),
+                completedTasks: document.getElementById('completedTasks'),
+                aiHelps: document.getElementById('aiHelps'),
+                codeScore: document.getElementById('codeScore')
+            };
+
+            setInterval(() => {
+                // 模擬數據變化
+                stats.activeUsers.textContent = Math.floor(Math.random() * 5) + 6;
+                stats.completedTasks.textContent = Math.floor(Math.random() * 10) + 150;
+                stats.codeScore.textContent = Math.floor(Math.random() * 10) + 85;
+            }, 5000);
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            updateStats();
+            
+            // 聊天輸入框回車發送
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+
+        // 添加一些動畫效果
+        function addAnimations() {
+            // 為統計卡片添加脈衝效果
+            const statsCards = document.querySelectorAll('.stats-card');
+            setInterval(() => {
+                const randomCard = statsCards[Math.floor(Math.random() * statsCards.length)];
+                randomCard.classList.add('pulse');
+                setTimeout(() => {
+                    randomCard.classList.remove('pulse');
+                }, 2000);
+            }, 8000);
+        }
+
+        // 啟動動畫
+        setTimeout(addAnimations, 3000);
+    </script>
+</body>
+</html> 

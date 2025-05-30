@@ -1,0 +1,34 @@
+{
+    "name": "python-collab/websocket-server",
+    "description": "Python協作教學平台 - WebSocket即時版 (Ratchet)",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Python Teaching Platform",
+            "email": "support@pythonteaching.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "cboden/ratchet": "^0.4.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PythonCollab\\": "src/"
+        }
+    },
+    "scripts": {
+        "start-websocket": "php websocket_server.php",
+        "test": "phpunit tests/"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+} 

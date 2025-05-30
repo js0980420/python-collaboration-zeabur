@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+
+{% block title %}程式練習 - Python 程式設計教學網站{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold">
+                    <i class="fas fa-code me-3"></i>Python 程式練習
+                </h1>
+                <p class="lead text-muted">
+                    在線編輯器讓您即學即用，AI助教幫您檢查程式碼
+                </p>
+            </div>
+
+            <div class="row">
+                <!-- 左側：程式編輯器 -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card card-custom">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-edit me-2"></i>Python 編輯器
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <textarea 
+                                id="codeEditor" 
+                                class="code-editor w-100"
+                                placeholder="# 在這裡輸入您的Python程式碼
+# 例如：
+print('Hello, Python!')
+
+# 定義函數
+def greet(name):
+    return f'你好，{name}！'
+
+# 呼叫函數
+message = greet('同學')
+print(message)
+"
+                            ></textarea>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button id="checkCodeBtn" class="btn btn-primary-custom">
+                                    <i class="fas fa-check me-2"></i>檢查程式碼
+                                </button>
+                                <button id="clearCodeBtn" class="btn btn-outline-secondary">
+                                    <i class="fas fa-trash me-2"></i>清空
+                                </button>
+                                <button id="exampleBtn" class="btn btn-outline-info">
+                                    <i class="fas fa-lightbulb me-2"></i>載入範例
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：練習題目和結果 -->
+                <div class="col-lg-4 mb-4">
+                    <!-- 練習題目 -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-tasks me-2"></i>練習題目
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="exerciseContent">
+                                <h6>第1題：基礎輸出</h6>
+                                <p class="small">編寫一個程式，輸出您的姓名和年齡。</p>
+                                <p class="small text-muted">提示：使用 print() 函數</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button id="prevExercise" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="exerciseCounter" class="btn btn-sm btn-light">1/10</span>
+                                <button id="nextExercise" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 程式碼檢查結果 -->
+                    <div class="card card-custom">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-clipboard-check me-2"></i>檢查結果
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="feedbackArea">
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    點擊"檢查程式碼"按鈕，AI助教會幫您分析程式碼
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 程式碼範例區域 -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card card-custom">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-star me-2"></i>實用程式碼範例
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-outline-primary w-100 example-btn" 
+                                            data-example="hello">
+                                        <i class="fas fa-play me-2"></i>Hello World
+                                    </button>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-outline-primary w-100 example-btn" 
+                                            data-example="calculator">
+                                        <i class="fas fa-calculator me-2"></i>簡單計算器
+                                    </button>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-outline-primary w-100 example-btn" 
+                                            data-example="list">
+                                        <i class="fas fa-list me-2"></i>列表操作
+                                    </button>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-outline-primary w-100 example-btn" 
+                                            data-example="function">
+                                        <i class="fas fa-cog me-2"></i>函數範例
+                                    </button>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-outline-primary w-100 example-btn" 
+                                            data-example="loop">
+                                        <i class="fas fa-sync me-2"></i>迴圈範例
+                                    </button>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <button class="btn btn-outline-primary w-100 example-btn" 
+                                            data-example="dict">
+                                        <i class="fas fa-book me-2"></i>字典範例
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 學習提示 -->
+            <div class="alert alert-info-custom mt-4">
+                <h6><i class="fas fa-graduation-cap me-2"></i>學習建議：</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="mb-0">
+                            <li>先嘗試自己寫程式碼</li>
+                            <li>遇到問題時查看範例</li>
+                            <li>使用AI助教檢查程式碼</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="mb-0">
+                            <li>多練習不同類型的題目</li>
+                            <li>理解錯誤訊息的含義</li>
+                            <li>逐步增加程式複雜度</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// 程式練習功能
+class PythonPractice {
+    constructor() {
+        this.codeEditor = document.getElementById('codeEditor');
+        this.checkCodeBtn = document.getElementById('checkCodeBtn');
+        this.clearCodeBtn = document.getElementById('clearCodeBtn');
+        this.exampleBtn = document.getElementById('exampleBtn');
+        this.feedbackArea = document.getElementById('feedbackArea');
+        this.exerciseContent = document.getElementById('exerciseContent');
+        this.exerciseCounter = document.getElementById('exerciseCounter');
+        this.prevExercise = document.getElementById('prevExercise');
+        this.nextExercise = document.getElementById('nextExercise');
+        this.exampleBtns = document.querySelectorAll('.example-btn');
+        
+        this.currentExercise = 0;
+        this.exercises = this.getExercises();
+        this.examples = this.getExamples();
+        
+        this.initEventListeners();
+        this.updateExercise();
+    }
+    
+    initEventListeners() {
+        this.checkCodeBtn.addEventListener('click', () => this.checkCode());
+        this.clearCodeBtn.addEventListener('click', () => this.clearCode());
+        this.exampleBtn.addEventListener('click', () => this.loadExample());
+        this.prevExercise.addEventListener('click', () => this.previousExercise());
+        this.nextExercise.addEventListener('click', () => this.nextExercise());
+        
+        this.exampleBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const exampleType = e.target.closest('button').getAttribute('data-example');
+                this.loadSpecificExample(exampleType);
+            });
+        });
+    }
+    
+    async checkCode() {
+        const code = this.codeEditor.value.trim();
+        if (!code) {
+            this.showFeedback('請先輸入一些程式碼', 'warning');
+            return;
+        }
+        
+        this.showLoading();
+        
+        try {
+            const response = await fetch('/api/check-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                this.showFeedback(`錯誤：${data.error}`, 'danger');
+            } else {
+                this.showFeedback(data.feedback, 'success');
+            }
+        } catch (error) {
+            this.showFeedback('檢查程式碼時發生錯誤，請稍後再試', 'danger');
+        }
+    }
+    
+    clearCode() {
+        this.codeEditor.value = '';
+        this.feedbackArea.innerHTML = `
+            <p class="text-muted mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                編輯器已清空，可以開始寫新的程式碼了
+            </p>
+        `;
+    }
+    
+    loadExample() {
+        const example = this.examples.basic;
+        this.codeEditor.value = example;
+    }
+    
+    loadSpecificExample(type) {
+        if (this.examples[type]) {
+            this.codeEditor.value = this.examples[type];
+        }
+    }
+    
+    previousExercise() {
+        if (this.currentExercise > 0) {
+            this.currentExercise--;
+            this.updateExercise();
+        }
+    }
+    
+    nextExercise() {
+        if (this.currentExercise < this.exercises.length - 1) {
+            this.currentExercise++;
+            this.updateExercise();
+        }
+    }
+    
+    updateExercise() {
+        const exercise = this.exercises[this.currentExercise];
+        this.exerciseContent.innerHTML = `
+            <h6>${exercise.title}</h6>
+            <p class="small">${exercise.description}</p>
+            <p class="small text-muted">提示：${exercise.hint}</p>
+        `;
+        this.exerciseCounter.textContent = `${this.currentExercise + 1}/${this.exercises.length}`;
+        
+        // 更新按鈕狀態
+        this.prevExercise.disabled = this.currentExercise === 0;
+        this.nextExercise.disabled = this.currentExercise === this.exercises.length - 1;
+    }
+    
+    showLoading() {
+        this.feedbackArea.innerHTML = `
+            <div class="d-flex align-items-center">
+                <span class="loading me-2"></span>
+                AI助教正在檢查您的程式碼...
+            </div>
+        `;
+    }
+    
+    showFeedback(message, type) {
+        const iconMap = {
+            success: 'fas fa-check-circle text-success',
+            warning: 'fas fa-exclamation-triangle text-warning',
+            danger: 'fas fa-times-circle text-danger',
+            info: 'fas fa-info-circle text-info'
+        };
+        
+        const icon = iconMap[type] || iconMap.info;
+        
+        this.feedbackArea.innerHTML = `
+            <div class="alert alert-${type}-custom">
+                <i class="${icon} me-2"></i>
+                <div>${this.formatFeedback(message)}</div>
+            </div>
+        `;
+    }
+    
+    formatFeedback(content) {
+        // 簡單的格式化
+        content = content.replace(/\n/g, '<br>');
+        content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+        return content;
+    }
+    
+    getExercises() {
+        return [
+            {
+                title: '第1題：基礎輸出',
+                description: '編寫一個程式，輸出您的姓名和年齡。',
+                hint: '使用 print() 函數'
+            },
+            {
+                title: '第2題：變數運算',
+                description: '建立兩個數字變數，計算它們的加法、減法、乘法和除法。',
+                hint: '使用 +、-、*、/ 運算符'
+            },
+            {
+                title: '第3題：條件判斷',
+                description: '寫一個程式判斷一個數字是正數、負數還是零。',
+                hint: '使用 if、elif、else 語句'
+            },
+            {
+                title: '第4題：迴圈練習',
+                description: '使用迴圈輸出1到10的數字。',
+                hint: '可以使用 for 迴圈和 range() 函數'
+            },
+            {
+                title: '第5題：列表操作',
+                description: '建立一個水果列表，新增一個水果，然後輸出所有水果。',
+                hint: '使用 append() 方法新增元素'
+            },
+            {
+                title: '第6題：函數定義',
+                description: '定義一個函數來計算兩個數字的最大值。',
+                hint: '使用 def 關鍵字定義函數'
+            },
+            {
+                title: '第7題：字典操作',
+                description: '建立一個學生資訊字典，包含姓名、年齡和成績。',
+                hint: '使用 {} 來建立字典'
+            },
+            {
+                title: '第8題：字串處理',
+                description: '寫一個程式將使用者輸入的文字轉換為大寫。',
+                hint: '使用 upper() 方法'
+            },
+            {
+                title: '第9題：錯誤處理',
+                description: '寫一個程式處理除零錯誤。',
+                hint: '使用 try-except 語句'
+            },
+            {
+                title: '第10題：綜合練習',
+                description: '建立一個簡單的計算機程式，能進行四則運算。',
+                hint: '結合函數、條件判斷和迴圈'
+            }
+        ];
+    }
+    
+    getExamples() {
+        return {
+            basic: `# Python 基礎範例
+print("歡迎來到Python世界！")
+
+# 變數
+name = "小明"
+age = 20
+
+print(f"我是{name}，今年{age}歲")`,
+
+            hello: `# Hello World 範例
+print("Hello, World!")
+print("你好，世界！")
+print("歡迎學習Python程式設計")`,
+
+            calculator: `# 簡單計算器
+def calculator(a, b, operation):
+    """簡單計算器函數"""
+    if operation == '+':
+        return a + b
+    elif operation == '-':
+        return a - b
+    elif operation == '*':
+        return a * b
+    elif operation == '/':
+        if b != 0:
+            return a / b
+        else:
+            return "除數不能為零"
+    else:
+        return "無效的運算符"
+
+# 使用範例
+result = calculator(10, 5, '+')
+print(f"10 + 5 = {result}")
+
+result = calculator(10, 5, '*')
+print(f"10 * 5 = {result}")`,
+
+            list: `# 列表操作範例
+fruits = ["蘋果", "香蕉", "橘子"]
+
+# 顯示原始列表
+print("原始水果列表:", fruits)
+
+# 新增水果
+fruits.append("葡萄")
+fruits.insert(1, "草莓")
+
+# 顯示更新後的列表
+print("新增後的列表:", fruits)
+
+# 移除水果
+fruits.remove("香蕉")
+print("移除香蕉後:", fruits)
+
+# 列表長度
+print(f"水果數量: {len(fruits)}")
+
+# 遍歷列表
+print("\\n所有水果:")
+for i, fruit in enumerate(fruits, 1):
+    print(f"{i}. {fruit}")`,
+
+            function: `# 函數範例
+def greet(name, age=None):
+    """問候函數"""
+    if age:
+        return f"你好，{name}！你今年{age}歲。"
+    else:
+        return f"你好，{name}！"
+
+def is_even(number):
+    """判斷是否為偶數"""
+    return number % 2 == 0
+
+def fibonacci(n):
+    """計算費波那契數列"""
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+
+# 使用範例
+print(greet("小明"))
+print(greet("小華", 25))
+
+print(f"8是偶數嗎？{is_even(8)}")
+print(f"7是偶數嗎？{is_even(7)}")
+
+print(f"第7個費波那契數: {fibonacci(7)}")`,
+
+            loop: `# 迴圈範例
+print("=== for 迴圈 ===")
+# 基本for迴圈
+for i in range(5):
+    print(f"計數: {i}")
+
+print("\\n=== 列表迴圈 ===")
+# 遍歷列表
+colors = ["紅色", "綠色", "藍色", "黃色"]
+for color in colors:
+    print(f"我喜歡{color}")
+
+print("\\n=== while 迴圈 ===")
+# while迴圈
+count = 0
+while count < 3:
+    print(f"while迴圈第{count + 1}次")
+    count += 1
+
+print("\\n=== 九九乘法表 ===")
+# 巢狀迴圈
+for i in range(1, 4):
+    for j in range(1, 4):
+        print(f"{i} x {j} = {i * j}", end="  ")
+    print()  # 換行`,
+
+            dict: `# 字典範例
+# 建立學生字典
+student = {
+    "name": "小明",
+    "age": 20,
+    "grade": "大二",
+    "subjects": ["數學", "物理", "化學"],
+    "gpa": 3.8
+}
+
+print("學生資訊:")
+print(f"姓名: {student['name']}")
+print(f"年齡: {student['age']}")
+print(f"年級: {student['grade']}")
+print(f"GPA: {student['gpa']}")
+
+print("\\n修課科目:")
+for subject in student['subjects']:
+    print(f"- {subject}")
+
+# 新增資訊
+student['email'] = 'ming@example.com'
+student['phone'] = '0912-345-678'
+
+print("\\n完整資訊:")
+for key, value in student.items():
+    print(f"{key}: {value}")
+
+# 字典方法
+print(f"\\n所有鍵: {list(student.keys())}")
+print(f"字典大小: {len(student)}")`
+        };
+    }
+}
+
+// 初始化程式練習
+document.addEventListener('DOMContentLoaded', () => {
+    new PythonPractice();
+});
+</script>
+{% endblock %} 

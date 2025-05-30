@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 真實AI助手演示 - Grok API整合</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2d3748;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 30px;
+        }
+
+        .ai-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .code-editor {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .CodeMirror {
+            height: 300px;
+            font-size: 14px;
+        }
+
+        .ai-response {
+            background: #f8f9fa;
+            border-left: 4px solid var(--secondary-color);
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .ai-response.loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .api-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .api-status.connected {
+            background: var(--success-color);
+        }
+
+        .api-status.disconnected {
+            background: var(--danger-color);
+        }
+
+        .api-status.loading {
+            background: var(--warning-color);
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-ai:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .ai-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            background: var(--secondary-color);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .chat-message.ai {
+            background: white;
+            border: 1px solid #e0e0e0;
+            margin-right: auto;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 15px;
+            margin-right: auto;
+            max-width: 80px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            border: 1px solid #ffcccc;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .success-message {
+            background: #e6ffe6;
+            border: 1px solid #ccffcc;
+            color: #006600;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .code-analysis {
+            background: #f0f8ff;
+            border: 1px solid #b0d4f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .score-display {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .score-excellent { background: #27ae60; }
+        .score-good { background: #f39c12; }
+        .score-poor { background: #e74c3c; }
+
+        .suggestion-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .suggestion-list li {
+            background: white;
+            margin: 5px 0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .api-usage-info {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .demo-tabs {
+            margin-bottom: 30px;
+        }
+
+        .tab-content {
+            background: white;
+            border-radius: 0 10px 10px 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs .nav-link {
+            border-radius: 10px 10px 0 0;
+            border: none;
+            background: #f8f9fa;
+            color: #666;
+            margin-right: 5px;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: white;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- API狀態指示器 -->
+            <div id="apiStatus" class="api-status disconnected">
+                <i class="fas fa-circle"></i> API未連接
+            </div>
+
+            <!-- 標題區域 -->
+            <div class="ai-header">
+                <h1><i class="fas fa-robot"></i> 真實AI助手演示</h1>
+                <p class="mb-0">整合Grok API的Python教學助手 - 真實API調用展示</p>
+            </div>
+
+            <!-- API使用資訊 -->
+            <div class="api-usage-info">
+                <h6><i class="fas fa-info-circle"></i> API資訊</h6>
+                <p class="mb-1"><strong>API提供商：</strong> xAI (Grok)</p>
+                <p class="mb-1"><strong>模型：</strong> grok-beta</p>
+                <p class="mb-0"><strong>狀態：</strong> <span id="apiStatusText">準備中...</span></p>
+            </div>
+
+            <!-- 功能標籤頁 -->
+            <div class="demo-tabs">
+                <ul class="nav nav-tabs" id="demoTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="code-analysis-tab" data-bs-toggle="tab" data-bs-target="#code-analysis" type="button" role="tab">
+                            <i class="fas fa-code"></i> 程式碼分析
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="syntax-check-tab" data-bs-toggle="tab" data-bs-target="#syntax-check" type="button" role="tab">
+                            <i class="fas fa-bug"></i> 語法檢查
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="help-stuck-tab" data-bs-toggle="tab" data-bs-target="#help-stuck" type="button" role="tab">
+                            <i class="fas fa-question-circle"></i> 學習協助
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ai-chat-tab" data-bs-toggle="tab" data-bs-target="#ai-chat" type="button" role="tab">
+                            <i class="fas fa-comments"></i> AI對話
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="demoTabContent">
+                    <!-- 程式碼分析標籤頁 -->
+                    <div class="tab-pane fade show active" id="code-analysis" role="tabpanel">
+                        <h4><i class="fas fa-code"></i> AI程式碼分析</h4>
+                        <p class="text-muted">使用Grok AI分析您的Python程式碼，提供專業建議和評分</p>
+                        
+                        <div class="code-editor">
+                            <textarea id="codeEditor" placeholder="請輸入您的Python程式碼...">
+# 範例程式碼
+def calculate_average(numbers):
+    total = 0
+    for num in numbers:
+        total += num
+    return total / len(numbers)
+
+# 測試
+scores = [85, 92, 78, 96, 88]
+avg = calculate_average(scores)
+print(f"平均分數: {avg}")
+                            </textarea>
+                        </div>
+
+                        <button class="btn btn-ai" onclick="analyzeCode()">
+                            <i class="fas fa-search"></i> 分析程式碼
+                        </button>
+
+                        <div id="analysisResult"></div>
+                    </div>
+
+                    <!-- 語法檢查標籤頁 -->
+                    <div class="tab-pane fade" id="syntax-check" role="tabpanel">
+                        <h4><i class="fas fa-bug"></i> AI語法檢查</h4>
+                        <p class="text-muted">智能檢測Python語法錯誤並提供修正建議</p>
+                        
+                        <div class="code-editor">
+                            <textarea id="syntaxEditor" placeholder="請輸入需要檢查的程式碼...">
+# 包含語法錯誤的範例
+def greet(name)
+    print(f"Hello {name}"
+    return "Done"
+
+# 呼叫函數
+greet("World")
+                            </textarea>
+                        </div>
+
+                        <button class="btn btn-ai" onclick="checkSyntax()">
+                            <i class="fas fa-check"></i> 檢查語法
+                        </button>
+
+                        <div id="syntaxResult"></div>
+                    </div>
+
+                    <!-- 學習協助標籤頁 -->
+                    <div class="tab-pane fade" id="help-stuck" role="tabpanel">
+                        <h4><i class="fas fa-question-circle"></i> AI學習協助</h4>
+                        <p class="text-muted">當您遇到困難時，AI助手會提供個人化的學習指導</p>
+                        
+                        <div class="code-editor">
+                            <textarea id="stuckEditor" placeholder="請輸入您遇到困難的程式碼...">
+# 我想寫一個函數來計算階乘，但不知道怎麼開始
+# 階乘的定義：n! = n × (n-1) × (n-2) × ... × 1
+                            </textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stuckDuration" class="form-label">卡住時間（分鐘）：</label>
+                            <input type="number" class="form-control" id="stuckDuration" value="5" min="0" max="60">
+                        </div>
+
+                        <button class="btn btn-ai" onclick="getHelpStuck()">
+                            <i class="fas fa-hands-helping"></i> 獲取幫助
+                        </button>
+
+                        <div id="helpResult"></div>
+                    </div>
+
+                    <!-- AI對話標籤頁 -->
+                    <div class="tab-pane fade" id="ai-chat" role="tabpanel">
+                        <h4><i class="fas fa-comments"></i> AI助手對話</h4>
+                        <p class="text-muted">與AI助手進行自然語言對話，獲取程式設計幫助</p>
+                        
+                        <div class="chat-container" id="chatContainer">
+                            <div class="chat-message ai">
+                                <strong>AI助手：</strong> 您好！我是您的Python程式設計助手。有什麼可以幫助您的嗎？
+                            </div>
+                        </div>
+
+                        <div class="typing-indicator" id="typingIndicator">
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group mt-3">
+                            <input type="text" class="form-control" id="chatInput" placeholder="輸入您的問題..." onkeypress="handleChatKeyPress(event)">
+                            <button class="btn btn-ai" onclick="sendChatMessage()">
+                                <i class="fas fa-paper-plane"></i> 發送
+                            </button>
+                        </div>
+
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb"></i> 
+                                試試問：「如何使用迴圈？」、「什麼是函數？」、「如何處理錯誤？」
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API使用統計 -->
+            <div class="ai-metrics">
+                <div class="metric-card">
+                    <div class="metric-value" id="apiCalls">0</div>
+                    <div class="metric-label">API調用次數</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="responseTime">0ms</div>
+                    <div class="metric-label">平均回應時間</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="successRate">100%</div>
+                    <div class="metric-label">成功率</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="tokensUsed">0</div>
+                    <div class="metric-label">使用Token數</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入必要的JavaScript庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+
+    <script>
+        // 全局變數
+        let apiMetrics = {
+            calls: 0,
+            totalResponseTime: 0,
+            successCount: 0,
+            totalTokens: 0
+        };
+
+        // 初始化CodeMirror編輯器
+        let codeEditor, syntaxEditor, stuckEditor;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化程式碼編輯器
+            codeEditor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                indentWithTabs: false
+            });
+
+            syntaxEditor = CodeMirror.fromTextArea(document.getElementById('syntaxEditor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                indentWithTabs: false
+            });
+
+            stuckEditor = CodeMirror.fromTextArea(document.getElementById('stuckEditor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                indentWithTabs: false
+            });
+
+            // 測試API連接
+            testAPIConnection();
+        });
+
+        // 測試API連接
+        async function testAPIConnection() {
+            updateAPIStatus('loading', 'API連接測試中...');
+            
+            try {
+                const response = await callAI('general_help', {});
+                if (response.success) {
+                    updateAPIStatus('connected', 'API已連接 - Grok模型');
+                } else {
+                    updateAPIStatus('disconnected', 'API連接失敗');
+                }
+            } catch (error) {
+                updateAPIStatus('disconnected', 'API連接錯誤');
+                console.error('API連接測試失敗:', error);
+            }
+        }
+
+        // 更新API狀態
+        function updateAPIStatus(status, text) {
+            const statusElement = document.getElementById('apiStatus');
+            const statusTextElement = document.getElementById('apiStatusText');
+            
+            statusElement.className = `api-status ${status}`;
+            statusTextElement.textContent = text;
+            
+            const icons = {
+                connected: 'fas fa-check-circle',
+                disconnected: 'fas fa-times-circle',
+                loading: 'fas fa-spinner fa-spin'
+            };
+            
+            statusElement.innerHTML = `<i class="${icons[status]}"></i> ${text}`;
+        }
+
+        // 調用AI API
+        async function callAI(action, data) {
+            const startTime = Date.now();
+            apiMetrics.calls++;
+            
+            updateAPIStatus('loading', 'AI處理中...');
+            
+            try {
+                const response = await fetch('php_version/api/real_ai_assistant.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...data
+                    })
+                });
+
+                const result = await response.json();
+                const responseTime = Date.now() - startTime;
+                
+                // 更新統計
+                apiMetrics.totalResponseTime += responseTime;
+                if (result.success) {
+                    apiMetrics.successCount++;
+                }
+                if (result.usage && result.usage.total_tokens) {
+                    apiMetrics.totalTokens += result.usage.total_tokens;
+                }
+                
+                updateMetrics();
+                updateAPIStatus('connected', 'API已連接 - Grok模型');
+                
+                return result;
+            } catch (error) {
+                updateAPIStatus('disconnected', 'API調用失敗');
+                throw error;
+            }
+        }
+
+        // 更新統計數據
+        function updateMetrics() {
+            document.getElementById('apiCalls').textContent = apiMetrics.calls;
+            document.getElementById('responseTime').textContent = 
+                apiMetrics.calls > 0 ? Math.round(apiMetrics.totalResponseTime / apiMetrics.calls) + 'ms' : '0ms';
+            document.getElementById('successRate').textContent = 
+                apiMetrics.calls > 0 ? Math.round((apiMetrics.successCount / apiMetrics.calls) * 100) + '%' : '100%';
+            document.getElementById('tokensUsed').textContent = apiMetrics.totalTokens;
+        }
+
+        // 分析程式碼
+        async function analyzeCode() {
+            const code = codeEditor.getValue();
+            if (!code.trim()) {
+                showError('analysisResult', '請輸入程式碼');
+                return;
+            }
+
+            showLoading('analysisResult', '正在分析程式碼...');
+
+            try {
+                const result = await callAI('analyze_code', { code: code });
+                
+                if (result.success) {
+                    displayAnalysisResult(result.data);
+                } else {
+                    showError('analysisResult', result.error || '分析失敗');
+                }
+            } catch (error) {
+                showError('analysisResult', '網路錯誤，請稍後再試');
+            }
+        }
+
+        // 顯示分析結果
+        function displayAnalysisResult(data) {
+            const container = document.getElementById('analysisResult');
+            const score = data.score || 0;
+            const scoreClass = score >= 90 ? 'score-excellent' : score >= 70 ? 'score-good' : 'score-poor';
+            
+            container.innerHTML = `
+                <div class="code-analysis">
+                    <h5><i class="fas fa-chart-line"></i> 分析結果</h5>
+                    <div class="mb-3">
+                        <span class="score-display ${scoreClass}">程式碼評分: ${score}/100</span>
+                        <span class="badge bg-secondary">${data.complexity || '中等'}</span>
+                    </div>
+                    
+                    <div class="ai-response">
+                        <h6><i class="fas fa-robot"></i> AI分析報告</h6>
+                        <div>${formatAIResponse(data.ai_analysis)}</div>
+                    </div>
+                    
+                    ${data.suggestions && data.suggestions.length > 0 ? `
+                        <div class="mt-3">
+                            <h6><i class="fas fa-lightbulb"></i> 改進建議</h6>
+                            <ul class="suggestion-list">
+                                ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${data.errors && data.errors.length > 0 ? `
+                        <div class="mt-3">
+                            <h6><i class="fas fa-exclamation-triangle text-warning"></i> 發現問題</h6>
+                            <ul class="suggestion-list">
+                                ${data.errors.map(error => `<li class="text-danger">${error}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // 檢查語法
+        async function checkSyntax() {
+            const code = syntaxEditor.getValue();
+            if (!code.trim()) {
+                showError('syntaxResult', '請輸入程式碼');
+                return;
+            }
+
+            showLoading('syntaxResult', '正在檢查語法...');
+
+            try {
+                const result = await callAI('check_syntax', { code: code });
+                
+                if (result.success) {
+                    displaySyntaxResult(result.data);
+                } else {
+                    showError('syntaxResult', result.error || '檢查失敗');
+                }
+            } catch (error) {
+                showError('syntaxResult', '網路錯誤，請稍後再試');
+            }
+        }
+
+        // 顯示語法檢查結果
+        function displaySyntaxResult(data) {
+            const container = document.getElementById('syntaxResult');
+            const hasErrors = data.has_errors;
+            
+            container.innerHTML = `
+                <div class="${hasErrors ? 'error-message' : 'success-message'}">
+                    <h5>
+                        <i class="fas ${hasErrors ? 'fa-times-circle' : 'fa-check-circle'}"></i> 
+                        語法檢查結果
+                    </h5>
+                    <p>${hasErrors ? '發現語法錯誤' : '語法檢查通過'}</p>
+                </div>
+                
+                <div class="ai-response">
+                    <h6><i class="fas fa-robot"></i> AI檢查報告</h6>
+                    <div>${formatAIResponse(data.syntax_check)}</div>
+                </div>
+                
+                ${data.suggestions && data.suggestions.length > 0 ? `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-tools"></i> 修正建議</h6>
+                        <ul class="suggestion-list">
+                            ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // 獲取學習幫助
+        async function getHelpStuck() {
+            const code = stuckEditor.getValue();
+            const duration = document.getElementById('stuckDuration').value;
+            
+            if (!code.trim()) {
+                showError('helpResult', '請輸入您遇到困難的程式碼');
+                return;
+            }
+
+            showLoading('helpResult', '正在分析您的困難...');
+
+            try {
+                const result = await callAI('help_stuck', { 
+                    code: code, 
+                    stuck_duration: parseInt(duration) 
+                });
+                
+                if (result.success) {
+                    displayHelpResult(result.data);
+                } else {
+                    showError('helpResult', result.error || '獲取幫助失敗');
+                }
+            } catch (error) {
+                showError('helpResult', '網路錯誤，請稍後再試');
+            }
+        }
+
+        // 顯示學習幫助結果
+        function displayHelpResult(data) {
+            const container = document.getElementById('helpResult');
+            
+            container.innerHTML = `
+                <div class="ai-response">
+                    <h5><i class="fas fa-hands-helping"></i> AI學習指導</h5>
+                    <div class="mb-3">
+                        <span class="badge bg-info">難度: ${data.difficulty_level || '中等'}</span>
+                    </div>
+                    <div>${formatAIResponse(data.guidance)}</div>
+                </div>
+                
+                ${data.next_steps && data.next_steps.length > 0 ? `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-list-ol"></i> 建議步驟</h6>
+                        <ul class="suggestion-list">
+                            ${data.next_steps.map(step => `<li>${step}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${data.encouragement && data.encouragement.length > 0 ? `
+                    <div class="mt-3">
+                        <h6><i class="fas fa-heart text-danger"></i> 鼓勵話語</h6>
+                        <div class="alert alert-success">
+                            ${data.encouragement.join(' ')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // 發送聊天訊息
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 顯示用戶訊息
+            addChatMessage('user', message);
+            input.value = '';
+            
+            // 顯示輸入指示器
+            showTypingIndicator();
+            
+            try {
+                const result = await callAI('explain_concept', { concept: message });
+                
+                hideTypingIndicator();
+                
+                if (result.success) {
+                    addChatMessage('ai', formatAIResponse(result.data.concept_explanation || result.data.general_help));
+                } else {
+                    addChatMessage('ai', '抱歉，我現在無法回答這個問題。請稍後再試。');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addChatMessage('ai', '網路連接出現問題，請稍後再試。');
+            }
+        }
+
+        // 添加聊天訊息
+        function addChatMessage(type, message) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `<strong>您：</strong> ${message}`;
+            } else {
+                messageDiv.innerHTML = `<strong>AI助手：</strong> ${message}`;
+            }
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 顯示輸入指示器
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'block';
+            document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
+        }
+
+        // 隱藏輸入指示器
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'none';
+        }
+
+        // 處理聊天輸入按鍵
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 格式化AI回應
+        function formatAIResponse(response) {
+            if (typeof response === 'object') {
+                return JSON.stringify(response, null, 2);
+            }
+            
+            // 將換行符轉換為HTML
+            return response.replace(/\n/g, '<br>');
+        }
+
+        // 顯示載入狀態
+        function showLoading(containerId, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="ai-response loading">
+                    <i class="fas fa-spinner fa-spin"></i> ${message}
+                </div>
+            `;
+        }
+
+        // 顯示錯誤訊息
+        function showError(containerId, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i> ${message}
+                </div>
+            `;
+        }
+
+        // 顯示成功訊息
+        function showSuccess(containerId, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i> ${message}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 

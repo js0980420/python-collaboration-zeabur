@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤝 雙人協作效果實測 - Python教學平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 15px 25px;
+            color: white;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            margin: 3px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .control-panel {
+            background: #f8f9fa;
+            padding: 12px 25px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .collaboration-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            font-size: 12px;
+            min-width: 70px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .latency-good { color: #28a745; }
+        .latency-ok { color: #ffc107; }
+        .latency-bad { color: #dc3545; }
+        
+        .test-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 11px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.8fr 1fr;
+            height: 600px;
+        }
+        
+        .editor-panel {
+            position: relative;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .CodeMirror {
+            height: 600px !important;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .cursor-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .remote-cursor {
+            position: absolute;
+            width: 2px;
+            height: 18px;
+            z-index: 101;
+            transition: all 0.2s ease;
+        }
+        
+        .remote-cursor::before {
+            content: attr(data-user);
+            position: absolute;
+            top: -22px;
+            left: -3px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            white-space: nowrap;
+            color: white;
+            font-weight: bold;
+            z-index: 102;
+        }
+        
+        .remote-cursor.user-a {
+            background: #ff6b6b;
+            animation: blink-red 1.5s infinite;
+        }
+        
+        .remote-cursor.user-a::before {
+            background: #ff6b6b;
+        }
+        
+        .remote-cursor.user-b {
+            background: #4ecdc4;
+            animation: blink-cyan 1.5s infinite;
+        }
+        
+        .remote-cursor.user-b::before {
+            background: #4ecdc4;
+        }
+        
+        @keyframes blink-red {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        @keyframes blink-cyan {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .collaboration-panel {
+            display: flex;
+            flex-direction: column;
+            background: #fafafa;
+        }
+        
+        .panel-section {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            background: #f0f0f0;
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+        
+        .users-section {
+            flex: 0 0 100px;
+            background: #e8f4fd;
+            padding: 12px 15px;
+            border-bottom: 1px solid #d0d0d0;
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            background: white;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .user-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+        
+        .user-status.editing {
+            background: #ffc107;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
+        .latency-section {
+            flex: 0 0 120px;
+            background: #f0f8ff;
+            padding: 10px 15px;
+            border-bottom: 1px solid #d0d0d0;
+        }
+        
+        .latency-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+        
+        .latency-value {
+            font-weight: bold;
+        }
+        
+        .activity-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 15px;
+        }
+        
+        .activity-item {
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 11px;
+            border-left: 3px solid #007bff;
+        }
+        
+        .activity-item.edit { border-left-color: #28a745; }
+        .activity-item.cursor { border-left-color: #ffc107; }
+        .activity-item.system { border-left-color: #6c757d; }
+        
+        .activity-time {
+            color: #666;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+        
+        .test-instructions {
+            background: #fff3cd;
+            padding: 12px 20px;
+            border-bottom: 1px solid #ffeaa7;
+            font-size: 13px;
+            line-height: 1.3;
+        }
+        
+        .test-step {
+            margin-bottom: 6px;
+            padding: 3px 0;
+        }
+        
+        .test-step.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        .simulation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .simulation-modal {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+        }
+        
+        .simulation-overlay.show {
+            display: flex;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .collaboration-panel {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤝 雙人協作效果實測</h1>
+            <div class="subtitle">專業版 - 測試游標同步、代碼協作和延遲性能</div>
+        </div>
+        
+        <div class="control-panel">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">A</div>
+                <div>
+                    <div><strong id="user-name">用戶A</strong></div>
+                    <div style="font-size: 11px; color: #666;">房間: <span id="current-room">dual-test</span></div>
+                </div>
+            </div>
+            
+            <div class="collaboration-stats">
+                <div class="stat">
+                    <div class="stat-label">延遲</div>
+                    <div class="stat-value latency-good" id="latency-display">--ms</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">在線</div>
+                    <div class="stat-value" id="users-count">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">同步次數</div>
+                    <div class="stat-value" id="sync-count">0</div>
+                </div>
+            </div>
+            
+            <div class="test-controls">
+                <button class="btn btn-primary" onclick="openSecondWindow()">👥 開啟用戶B</button>
+                <button class="btn btn-success" onclick="startLatencyTest()">⏱️ 延遲測試</button>
+                <button class="btn btn-warning" onclick="simulatePairwork()" id="simulate-btn">🤖 模擬協作</button>
+                <button class="btn btn-danger" onclick="resetTest()">🔄 重置</button>
+            </div>
+        </div>
+        
+        <div class="test-instructions">
+            <strong>📋 雙人協作測試步驟：</strong>
+            <div class="test-step" id="step-1">1. 點擊 "👥 開啟用戶B" 打開第二個協作窗口</div>
+            <div class="test-step" id="step-2">2. 在任一窗口編輯代碼，觀察另一窗口的即時同步</div>
+            <div class="test-step" id="step-3">3. 移動游標，觀察對方的彩色游標顯示</div>
+            <div class="test-step" id="step-4">4. 點擊 "⏱️ 延遲測試" 測量同步延遲時間</div>
+            <div class="test-step" id="step-5">5. 使用 "🤖 模擬協作" 自動演示協作效果</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="editor-panel">
+                <div class="cursor-overlay" id="cursor-overlay"></div>
+                <textarea id="code-editor" placeholder="開始雙人協作編程測試..."></textarea>
+            </div>
+            
+            <div class="collaboration-panel">
+                <div class="panel-section users-section">
+                    <div class="panel-header">👥 協作用戶</div>
+                    <div id="users-list">
+                        <div class="user-item">
+                            <div class="user-status" id="user-status-self"></div>
+                            <span>用戶A (您)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-section latency-section">
+                    <div class="panel-header">📊 延遲監控</div>
+                    <div class="latency-item">
+                        <span>代碼同步:</span>
+                        <span class="latency-value latency-good" id="code-latency">--ms</span>
+                    </div>
+                    <div class="latency-item">
+                        <span>游標同步:</span>
+                        <span class="latency-value latency-good" id="cursor-latency">--ms</span>
+                    </div>
+                    <div class="latency-item">
+                        <span>平均延遲:</span>
+                        <span class="latency-value latency-good" id="avg-latency">--ms</span>
+                    </div>
+                    <div class="latency-item">
+                        <span>連接狀態:</span>
+                        <span class="latency-value" id="connection-status">就緒</span>
+                    </div>
+                </div>
+                
+                <div class="panel-section activity-section">
+                    <div class="panel-header">📝 協作活動</div>
+                    <div id="activity-log">
+                        <div class="activity-item system">
+                            <div><strong>系統</strong> 雙人協作環境已就緒</div>
+                            <div class="activity-time">準備開始測試</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="simulation-overlay" id="simulation-overlay">
+        <div class="simulation-modal">
+            <h3>🤖 正在模擬用戶B的操作</h3>
+            <p id="simulation-status">準備開始協作演示...</p>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-danger" onclick="stopSimulation()">停止模擬</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        let editor;
+        let currentRoom = 'dual-test';
+        let userId = 'user_' + Math.random().toString(36).substr(2, 4);
+        let userName = '用戶A';
+        let collaborationChannel;
+        let remoteCursors = new Map();
+        let latencyData = {
+            code: [],
+            cursor: [],
+            sync: 0
+        };
+        let isSimulating = false;
+        let simulationInterval;
+        let lastActivity = Date.now();
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initEditor();
+            initCollaboration();
+            startMonitoring();
+            
+            // 設置用戶信息
+            setUserIdentity();
+            
+            addActivity('系統', '雙人協作測試環境已啟動', 'system');
+        });
+        
+        // 設置用戶身份
+        function setUserIdentity() {
+            // 根據窗口數量自動分配用戶身份
+            const windowCount = parseInt(localStorage.getItem('windowCount') || '0') + 1;
+            localStorage.setItem('windowCount', windowCount.toString());
+            
+            if (windowCount === 1) {
+                userName = '用戶A';
+                document.getElementById('user-avatar').textContent = 'A';
+                document.getElementById('user-avatar').style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)';
+            } else {
+                userName = '用戶B';
+                document.getElementById('user-avatar').textContent = 'B';
+                document.getElementById('user-avatar').style.background = 'linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%)';
+                document.title = '🤝 雙人協作效果實測 - 用戶B';
+            }
+            
+            document.getElementById('user-name').textContent = userName;
+        }
+        
+        // 初始化編輯器
+        function initEditor() {
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                lineWrapping: true,
+                extraKeys: {
+                    "Tab": function(cm) {
+                        cm.replaceSelection("    ", "end");
+                    }
+                }
+            });
+            
+            // 簡化的初始代碼
+            const initialCode = `# 🤝 雙人協作實測 - Python 教學平台
+# 支援即時代碼同步和游標追蹤！
+
+def collaboration_demo():
+    """雙人協作演示函數"""
+    print("歡迎體驗雙人協作編程！")
+    
+    # 請在這裡添加您的代碼
+    # 另一位用戶可以即時看到您的修改
+    
+    features = [
+        "即時代碼同步",
+        "游標位置顯示",
+        "延遲性能監控"
+    ]
+    
+    for i, feature in enumerate(features, 1):
+        print(f"{i}. {feature}")
+    
+    return "協作測試成功！"
+
+# 測試函數
+def test_sync():
+    """測試同步效果"""
+    import time
+    timestamp = int(time.time())
+    print(f"同步測試時間戳: {timestamp}")
+    return timestamp
+
+if __name__ == "__main__":
+    print("🎯 開始雙人協作測試...")
+    collaboration_demo()
+    test_sync()
+`;
+            
+            editor.setValue(initialCode);
+            
+            // 監聽編輯器事件
+            editor.on('change', handleCodeChange);
+            editor.on('cursorActivity', handleCursorChange);
+            
+            // 監聽焦點事件
+            editor.on('focus', () => {
+                updateUserStatus('editing');
+                addActivity(userName, '開始編輯代碼', 'edit');
+            });
+            
+            editor.on('blur', () => {
+                updateUserStatus('online');
+            });
+        }
+        
+        // 初始化協作功能
+        function initCollaboration() {
+            collaborationChannel = new BroadcastChannel('dual_collab_' + currentRoom);
+            
+            collaborationChannel.onmessage = function(event) {
+                handleCollaborationMessage(event.data);
+            };
+            
+            // 廣播用戶加入
+            setTimeout(() => {
+                broadcastMessage({
+                    type: 'user_join',
+                    userId: userId,
+                    userName: userName,
+                    timestamp: Date.now()
+                });
+            }, 500);
+            
+            addActivity('系統', '已連接到協作房間: ' + currentRoom, 'system');
+        }
+        
+        // 處理代碼變更
+        function handleCodeChange(cm, change) {
+            if (change.origin === 'remote' || change.origin === 'simulation') return;
+            
+            const changeData = {
+                type: 'code_change',
+                userId: userId,
+                userName: userName,
+                change: {
+                    from: change.from,
+                    to: change.to,
+                    text: change.text,
+                    removed: change.removed
+                },
+                timestamp: Date.now(),
+                fullCode: cm.getValue()
+            };
+            
+            broadcastMessage(changeData);
+            updateSyncCount();
+            addActivity(userName, `編輯了第 ${change.from.line + 1} 行`, 'edit');
+            lastActivity = Date.now();
+        }
+        
+        // 處理游標變更
+        function handleCursorChange(cm) {
+            const cursor = cm.getCursor();
+            const cursorData = {
+                type: 'cursor_change',
+                userId: userId,
+                userName: userName,
+                cursor: cursor,
+                timestamp: Date.now()
+            };
+            
+            broadcastMessage(cursorData);
+            lastActivity = Date.now();
+        }
+        
+        // 處理協作消息
+        function handleCollaborationMessage(data) {
+            if (data.userId === userId) return;
+            
+            const latency = Date.now() - data.timestamp;
+            
+            switch (data.type) {
+                case 'user_join':
+                    addUser(data.userId, data.userName);
+                    addActivity(data.userName, '加入了協作', 'system');
+                    break;
+                    
+                case 'user_leave':
+                    removeUser(data.userId);
+                    addActivity(data.userName, '離開了協作', 'system');
+                    break;
+                    
+                case 'code_change':
+                    applyRemoteCodeChange(data);
+                    recordLatency('code', latency);
+                    addActivity(data.userName, '同步了代碼變更', 'edit');
+                    break;
+                    
+                case 'cursor_change':
+                    updateRemoteCursor(data.userId, data.userName, data.cursor);
+                    recordLatency('cursor', latency);
+                    break;
+            }
+            
+            updateLatencyDisplay();
+        }
+        
+        // 應用遠程代碼變更
+        function applyRemoteCodeChange(data) {
+            const currentCode = editor.getValue();
+            if (currentCode !== data.fullCode) {
+                const cursor = editor.getCursor();
+                editor.setValue(data.fullCode);
+                editor.setCursor(cursor);
+            }
+        }
+        
+        // 更新遠程游標
+        function updateRemoteCursor(userId, userName, cursor) {
+            const overlay = document.getElementById('cursor-overlay');
+            let cursorElement = document.getElementById('cursor-' + userId);
+            
+            if (!cursorElement) {
+                cursorElement = document.createElement('div');
+                cursorElement.id = 'cursor-' + userId;
+                cursorElement.className = 'remote-cursor ' + (userName.includes('A') ? 'user-a' : 'user-b');
+                cursorElement.setAttribute('data-user', userName);
+                overlay.appendChild(cursorElement);
+            }
+            
+            // 計算游標位置
+            try {
+                const coords = editor.cursorCoords({line: cursor.line, ch: cursor.ch}, 'local');
+                cursorElement.style.left = coords.left + 'px';
+                cursorElement.style.top = coords.top + 'px';
+                cursorElement.style.display = 'block';
+            } catch (e) {
+                cursorElement.style.display = 'none';
+            }
+            
+            remoteCursors.set(userId, {
+                element: cursorElement,
+                userName: userName,
+                lastUpdate: Date.now()
+            });
+        }
+        
+        // 添加用戶
+        function addUser(userId, userName) {
+            const usersList = document.getElementById('users-list');
+            
+            // 檢查是否已存在
+            if (document.getElementById('user-item-' + userId)) return;
+            
+            const userItem = document.createElement('div');
+            userItem.className = 'user-item';
+            userItem.id = 'user-item-' + userId;
+            
+            userItem.innerHTML = `
+                <div class="user-status" id="status-${userId}"></div>
+                <span>${userName}</span>
+            `;
+            
+            usersList.appendChild(userItem);
+            updateUsersCount();
+        }
+        
+        // 移除用戶
+        function removeUser(userId) {
+            const userItem = document.getElementById('user-item-' + userId);
+            if (userItem) {
+                userItem.remove();
+            }
+            
+            const cursor = remoteCursors.get(userId);
+            if (cursor && cursor.element.parentNode) {
+                cursor.element.parentNode.removeChild(cursor.element);
+            }
+            remoteCursors.delete(userId);
+            
+            updateUsersCount();
+        }
+        
+        // 更新用戶數量
+        function updateUsersCount() {
+            const count = document.getElementById('users-list').children.length;
+            document.getElementById('users-count').textContent = count;
+        }
+        
+        // 更新用戶狀態
+        function updateUserStatus(status) {
+            const statusElement = document.getElementById('user-status-self');
+            if (statusElement) {
+                statusElement.className = 'user-status ' + status;
+            }
+        }
+        
+        // 廣播消息
+        function broadcastMessage(data) {
+            try {
+                collaborationChannel.postMessage(data);
+            } catch (error) {
+                console.error('廣播失敗:', error);
+                document.getElementById('connection-status').textContent = '異常';
+            }
+        }
+        
+        // 記錄延遲
+        function recordLatency(type, latency) {
+            if (!latencyData[type]) latencyData[type] = [];
+            
+            latencyData[type].push(latency);
+            if (latencyData[type].length > 5) {
+                latencyData[type].shift();
+            }
+        }
+        
+        // 更新延遲顯示
+        function updateLatencyDisplay() {
+            const types = ['code', 'cursor'];
+            let totalLatency = 0;
+            let count = 0;
+            
+            types.forEach(type => {
+                const data = latencyData[type];
+                if (data.length > 0) {
+                    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+                    const element = document.getElementById(type + '-latency');
+                    
+                    if (element) {
+                        element.textContent = Math.round(avg) + 'ms';
+                        element.className = 'latency-value ' + getLatencyClass(avg);
+                    }
+                    
+                    totalLatency += avg;
+                    count++;
+                }
+            });
+            
+            if (count > 0) {
+                const avgLatency = totalLatency / count;
+                const avgElement = document.getElementById('avg-latency');
+                const displayElement = document.getElementById('latency-display');
+                
+                if (avgElement) {
+                    avgElement.textContent = Math.round(avgLatency) + 'ms';
+                    avgElement.className = 'latency-value ' + getLatencyClass(avgLatency);
+                }
+                
+                if (displayElement) {
+                    displayElement.textContent = Math.round(avgLatency) + 'ms';
+                    displayElement.className = 'stat-value ' + getLatencyClass(avgLatency);
+                }
+            }
+        }
+        
+        // 獲取延遲等級
+        function getLatencyClass(latency) {
+            if (latency < 100) return 'latency-good';
+            if (latency < 300) return 'latency-ok';
+            return 'latency-bad';
+        }
+        
+        // 開始監控
+        function startMonitoring() {
+            setInterval(() => {
+                updateLatencyDisplay();
+                
+                // 檢查連接狀態
+                const now = Date.now();
+                if (now - lastActivity > 30000) {
+                    document.getElementById('connection-status').textContent = '閒置';
+                } else {
+                    document.getElementById('connection-status').textContent = '活躍';
+                }
+            }, 1000);
+        }
+        
+        // 更新同步計數
+        function updateSyncCount() {
+            latencyData.sync++;
+            document.getElementById('sync-count').textContent = latencyData.sync;
+        }
+        
+        // 添加活動記錄
+        function addActivity(user, action, type) {
+            const activityLog = document.getElementById('activity-log');
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item ' + type;
+            
+            const time = new Date().toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            activityItem.innerHTML = `
+                <div><strong>${user}</strong> ${action}</div>
+                <div class="activity-time">${time}</div>
+            `;
+            
+            activityLog.insertBefore(activityItem, activityLog.firstChild);
+            
+            // 限制記錄數量
+            while (activityLog.children.length > 20) {
+                activityLog.removeChild(activityLog.lastChild);
+            }
+        }
+        
+        // 開啟第二個窗口
+        function openSecondWindow() {
+            const currentUrl = window.location.href;
+            window.open(currentUrl, 'user_b_window', 'width=800,height=700,left=100,top=100');
+            
+            addActivity('系統', '已開啟用戶B窗口', 'system');
+            document.getElementById('step-1').classList.add('completed');
+            
+            setTimeout(() => {
+                addActivity('提示', '現在可以在兩個窗口中測試協作了！', 'system');
+            }, 2000);
+        }
+        
+        // 開始延遲測試
+        function startLatencyTest() {
+            addActivity('系統', '開始延遲測試...', 'system');
+            
+            let testCount = 0;
+            const maxTests = 5;
+            
+            const testInterval = setInterval(() => {
+                if (testCount >= maxTests) {
+                    clearInterval(testInterval);
+                    addActivity('系統', '延遲測試完成', 'system');
+                    document.getElementById('step-4').classList.add('completed');
+                    return;
+                }
+                
+                const testData = {
+                    type: 'latency_test',
+                    userId: userId,
+                    userName: userName,
+                    testId: testCount,
+                    timestamp: Date.now()
+                };
+                
+                broadcastMessage(testData);
+                testCount++;
+                
+                addActivity('測試', `延遲測試 ${testCount}/${maxTests}`, 'system');
+            }, 800);
+        }
+        
+        // 模擬雙人協作
+        function simulatePairwork() {
+            if (isSimulating) return;
+            
+            isSimulating = true;
+            document.getElementById('simulation-overlay').classList.add('show');
+            document.getElementById('simulate-btn').disabled = true;
+            document.getElementById('step-5').classList.add('completed');
+            
+            const collaborativeChanges = [
+                { line: 8, text: '    # 用戶B添加：協作開始', action: '添加註釋', delay: 1000 },
+                { line: 12, text: '    user_b_feature = "雙人協作功能"', action: '添加變量', delay: 2000 },
+                { line: 16, text: '        "用戶B的貢獻",', action: '添加列表項', delay: 1500 },
+                { line: 20, text: '        print(f"用戶B: {feature}")', action: '修改代碼', delay: 2000 },
+                { line: 24, text: '    print("雙人協作完成！")', action: '添加輸出', delay: 1000 }
+            ];
+            
+            let changeIndex = 0;
+            
+            function executeNextChange() {
+                if (changeIndex >= collaborativeChanges.length || !isSimulating) {
+                    stopSimulation();
+                    return;
+                }
+                
+                const change = collaborativeChanges[changeIndex];
+                const partnerName = '用戶B';
+                
+                // 更新狀態
+                document.getElementById('simulation-status').textContent = 
+                    `${partnerName} 正在: ${change.action}`;
+                
+                // 模擬游標移動
+                updateRemoteCursor('sim_user', partnerName, { line: change.line, ch: 0 });
+                
+                // 模擬代碼變更
+                setTimeout(() => {
+                    const currentCode = editor.getValue();
+                    const lines = currentCode.split('\n');
+                    
+                    if (lines[change.line]) {
+                        lines.splice(change.line + 1, 0, change.text);
+                    } else {
+                        lines.push(change.text);
+                    }
+                    
+                    editor.setValue(lines.join('\n'));
+                    addActivity(partnerName, change.action, 'edit');
+                    
+                    changeIndex++;
+                    setTimeout(executeNextChange, change.delay);
+                }, 500);
+            }
+            
+            setTimeout(executeNextChange, 1000);
+            addActivity('系統', '開始模擬雙人協作', 'system');
+        }
+        
+        // 停止模擬
+        function stopSimulation() {
+            isSimulating = false;
+            document.getElementById('simulation-overlay').classList.remove('show');
+            document.getElementById('simulate-btn').disabled = false;
+            
+            // 清理模擬游標
+            const simCursor = document.getElementById('cursor-sim_user');
+            if (simCursor && simCursor.parentNode) {
+                simCursor.parentNode.removeChild(simCursor);
+            }
+            
+            addActivity('系統', '協作模擬已結束', 'system');
+        }
+        
+        // 重置測試
+        function resetTest() {
+            if (confirm('確定要重置測試嗎？')) {
+                location.reload();
+            }
+        }
+        
+        // 頁面關閉時清理
+        window.addEventListener('beforeunload', function() {
+            localStorage.setItem('windowCount', '0');
+            broadcastMessage({
+                type: 'user_leave',
+                userId: userId,
+                userName: userName,
+                timestamp: Date.now()
+            });
+        });
+    </script>
+</body>
+</html> 

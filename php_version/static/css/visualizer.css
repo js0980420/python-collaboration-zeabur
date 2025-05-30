@@ -1,0 +1,408 @@
+/* 🎯 程式碼視覺化樣式 */
+
+/* 程式碼執行器容器 */
+.code-visualizer {
+    background: #1e1e1e;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.code-visualizer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+    background-size: 400% 400%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* 程式碼編輯區 */
+.code-editor {
+    background: #2d2d2d;
+    border: none;
+    color: #f8f8f2;
+    font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 20px;
+    border-radius: 10px;
+    resize: vertical;
+    min-height: 200px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.code-editor:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #4ecdc4;
+}
+
+/* 行號顯示 */
+.line-numbers {
+    background: #1e1e1e;
+    color: #6c7086;
+    padding: 20px 10px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    border-radius: 10px 0 0 10px;
+    user-select: none;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 當前執行行高亮 */
+.current-line {
+    background: rgba(255, 255, 0, 0.2);
+    border-left: 4px solid #ffeb3b;
+    animation: pulse-line 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-line {
+    from { background: rgba(255, 255, 0, 0.2); }
+    to { background: rgba(255, 255, 0, 0.4); }
+}
+
+/* 變數監視器 */
+.variable-monitor {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.variable-monitor h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 16px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+}
+
+.variable-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+.variable-item.changed {
+    background: #fff3cd;
+    border-left-color: #ffc107;
+    animation: highlight 0.5s ease;
+}
+
+@keyframes highlight {
+    0% { background: #fff3cd; }
+    50% { background: #ffeaa7; }
+    100% { background: #fff3cd; }
+}
+
+.variable-name {
+    font-weight: bold;
+    color: #8e44ad;
+    font-family: monospace;
+}
+
+.variable-value {
+    color: #27ae60;
+    font-family: monospace;
+    background: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+/* 執行步驟顯示 */
+.execution-steps {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.step-item.active {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #3498db;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+    font-size: 14px;
+}
+
+.step-description {
+    flex: 1;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+/* 流程圖容器 */
+.flowchart-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    text-align: center;
+    min-height: 200px;
+    position: relative;
+}
+
+.flowchart-node {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.node-start { background: #27ae60; }
+.node-process { background: #3498db; }
+.node-decision { 
+    background: #f39c12; 
+    transform: rotate(45deg);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.node-end { background: #e74c3c; }
+
+.node-active {
+    animation: nodeGlow 1s ease-in-out infinite alternate;
+    transform: scale(1.1);
+}
+
+@keyframes nodeGlow {
+    from { box-shadow: 0 0 10px rgba(52, 152, 219, 0.5); }
+    to { box-shadow: 0 0 20px rgba(52, 152, 219, 0.8); }
+}
+
+/* 連接線 */
+.flowchart-arrow {
+    position: absolute;
+    width: 2px;
+    background: #34495e;
+    z-index: 1;
+}
+
+.flowchart-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: -3px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 8px solid #34495e;
+}
+
+/* 輸出控制台 */
+.console-output {
+    background: #1e1e1e;
+    color: #00ff00;
+    font-family: 'Fira Code', monospace;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid #333;
+}
+
+.console-line {
+    margin: 2px 0;
+    animation: typewriter 0.5s ease-out;
+}
+
+@keyframes typewriter {
+    from { width: 0; opacity: 0; }
+    to { width: 100%; opacity: 1; }
+}
+
+.console-prompt::before {
+    content: '>>> ';
+    color: #ffeb3b;
+}
+
+.console-output::before {
+    content: '輸出結果:';
+    color: #4ecdc4;
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* 控制按鈕 */
+.control-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-run {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-run:hover {
+    background: #2ecc71;
+    transform: translateY(-2px);
+}
+
+.btn-step {
+    background: #3498db;
+    color: white;
+}
+
+.btn-step:hover {
+    background: #5dade2;
+    transform: translateY(-2px);
+}
+
+.btn-reset {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #ec7063;
+    transform: translateY(-2px);
+}
+
+.btn-pause {
+    background: #f39c12;
+    color: white;
+}
+
+.btn-pause:hover {
+    background: #f7dc6f;
+    transform: translateY(-2px);
+}
+
+/* 速度控制 */
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.speed-slider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+}
+
+/* 錯誤高亮 */
+.error-line {
+    background: rgba(231, 76, 60, 0.2);
+    border-left: 4px solid #e74c3c;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border-left: 4px solid #e74c3c;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .code-visualizer {
+        padding: 15px;
+    }
+    
+    .control-buttons {
+        justify-content: center;
+    }
+    
+    .control-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    
+    .variable-monitor,
+    .execution-steps {
+        padding: 10px;
+    }
+} 

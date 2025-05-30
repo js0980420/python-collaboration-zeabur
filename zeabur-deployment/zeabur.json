@@ -1,0 +1,29 @@
+{
+  "name": "python-collaboration-platform",
+  "type": "php",
+  "runtime": "php8.1",
+  "buildCommand": "composer install --no-dev --optimize-autoloader",
+  "startCommand": "apache2-foreground",
+  "rootDirectory": "./",
+  "envs": {
+    "DB_HOST": "${ZEABUR_MYSQL_HOST}",
+    "DB_PORT": "${ZEABUR_MYSQL_PORT}",
+    "DB_NAME": "${ZEABUR_MYSQL_DATABASE}",
+    "DB_USER": "${ZEABUR_MYSQL_USERNAME}",
+    "DB_PASS": "${ZEABUR_MYSQL_PASSWORD}",
+    "PHP_MEMORY_LIMIT": "256M",
+    "PHP_MAX_EXECUTION_TIME": "300",
+    "PHP_UPLOAD_MAX_FILESIZE": "50M",
+    "PHP_POST_MAX_SIZE": "50M"
+  },
+  "services": [
+    {
+      "name": "mysql",
+      "type": "mysql",
+      "version": "8.0"
+    }
+  ],
+  "domains": [
+    "python-collaboration.zeabur.app"
+  ]
+} 

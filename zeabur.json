@@ -1,0 +1,53 @@
+{
+  "name": "python-collaboration-platform",
+  "version": "1.0.0",
+  "description": "Python協作教學平台 - WebSocket即時版",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "ports": [
+    {
+      "port": 80,
+      "protocol": "http",
+      "public": true
+    },
+    {
+      "port": 8080,
+      "protocol": "tcp",
+      "public": true
+    }
+  ],
+  "environment": {
+    "DB_HOST": "${MYSQL_HOST}",
+    "DB_PORT": "${MYSQL_PORT}",
+    "DB_NAME": "${MYSQL_DATABASE}",
+    "DB_USER": "${MYSQL_USERNAME}",
+    "DB_PASSWORD": "${MYSQL_PASSWORD}",
+    "APACHE_DOCUMENT_ROOT": "/var/www/html",
+    "WEBSOCKET_PORT": "8080"
+  },
+  "services": [
+    {
+      "name": "mysql",
+      "image": "mysql:8.0",
+      "environment": {
+        "MYSQL_DATABASE": "python_collaboration",
+        "MYSQL_ROOT_PASSWORD": "zeabur123456",
+        "MYSQL_USER": "collab_user",
+        "MYSQL_PASSWORD": "collab_pass"
+      },
+      "volumes": [
+        {
+          "source": "./mysql",
+          "target": "/docker-entrypoint-initdb.d"
+        }
+      ]
+    }
+  ],
+  "domains": [
+    {
+      "domain": "*.zeabur.app",
+      "port": 80
+    }
+  ]
+} 

@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Python協作教學平台 - 跨設備同步版</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .connection-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            color: #555;
+            white-space: nowrap;
+        }
+        
+        .input-group input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn.connected {
+            background: #27ae60;
+        }
+        
+        .btn.connected:hover {
+            background: #229954;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-indicator.connected {
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+        }
+        
+        .status-indicator.connecting {
+            background: rgba(243, 156, 18, 0.1);
+            color: #f39c12;
+        }
+        
+        .status-indicator.disconnected {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 140px);
+        }
+        
+        .code-section {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .code-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .code-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .code-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .code-actions .btn {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        
+        .editor-container {
+            flex: 1;
+            position: relative;
+            background: #1e1e1e;
+        }
+        
+        #codeEditor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            overflow-y: auto;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .panel-header {
+            background: #34495e;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel-content {
+            padding: 20px;
+        }
+        
+        .users-panel {
+            max-height: 250px;
+        }
+        
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .user-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .user-status {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .user-cursor {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chat-panel {
+            flex: 1;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .message.system {
+            border-left-color: #95a5a6;
+            background: #ecf0f1;
+            font-style: italic;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .message-author {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+        
+        .message-content {
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        .chat-input:focus {
+            border-color: #3498db;
+        }
+        
+        .stats-panel .panel-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .sync-indicator {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .sync-indicator.show {
+            transform: translateX(0);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .connection-controls {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        .ai-helper {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .ai-helper .panel-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .ai-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-btn {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .ai-response {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                Python協作教學平台
+            </div>
+            
+            <div class="connection-controls">
+                <div class="input-group">
+                    <label for="roomCode">房間代碼:</label>
+                    <input type="text" id="roomCode" value="PY001" placeholder="輸入房間代碼">
+                </div>
+                
+                <div class="input-group">
+                    <label for="userName">用戶名稱:</label>
+                    <input type="text" id="userName" value="" placeholder="輸入您的名稱">
+                </div>
+                
+                <button id="connectBtn" class="btn">
+                    <i class="fas fa-plug"></i>
+                    <span>連接協作</span>
+                </button>
+                
+                <div id="connectionStatus" class="status-indicator disconnected">
+                    <i class="fas fa-circle"></i>
+                    <span>未連接</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="code-section">
+            <div class="code-header">
+                <div class="code-title">
+                    <i class="fab fa-python"></i>
+                    Python代碼編輯器
+                    <span id="versionInfo">(版本: 1)</span>
+                </div>
+                <div class="code-actions">
+                    <button class="btn" onclick="runCode()">
+                        <i class="fas fa-play"></i>
+                        執行代碼
+                    </button>
+                    <button class="btn" onclick="saveCode()">
+                        <i class="fas fa-save"></i>
+                        保存代碼
+                    </button>
+                </div>
+            </div>
+            <div class="editor-container">
+                <textarea id="codeEditor" placeholder="在此輸入Python代碼...開始協作編程吧！"></textarea>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <!-- 協作用戶面板 -->
+            <div class="panel users-panel">
+                <div class="panel-header">
+                    <i class="fas fa-users"></i>
+                    協作用戶 (<span id="userCount">0</span>)
+                </div>
+                <div class="panel-content">
+                    <div id="userList" class="user-list">
+                        <!-- 用戶列表將動態生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI智能助教 -->
+            <div class="panel ai-helper">
+                <div class="panel-header">
+                    <i class="fas fa-robot"></i>
+                    AI智能助教
+                </div>
+                <div class="panel-content">
+                    <div class="ai-actions">
+                        <button class="ai-btn" onclick="askAI('explain')">
+                            <i class="fas fa-lightbulb"></i> 解釋程式碼
+                        </button>
+                        <button class="ai-btn" onclick="askAI('debug')">
+                            <i class="fas fa-bug"></i> 檢查錯誤
+                        </button>
+                        <button class="ai-btn" onclick="askAI('improve')">
+                            <i class="fas fa-magic"></i> 改進建議
+                        </button>
+                        <button class="ai-btn" onclick="askAI('question')">
+                            <i class="fas fa-question"></i> 自定義問題
+                        </button>
+                    </div>
+                    <div id="aiResponse" class="ai-response" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- 聊天面板 -->
+            <div class="panel chat-panel">
+                <div class="panel-header">
+                    <i class="fas fa-comments"></i>
+                    討論聊天
+                </div>
+                <div class="panel-content">
+                    <div id="chatMessages" class="chat-messages">
+                        <!-- 聊天消息將動態生成 -->
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="輸入消息..." maxlength="200">
+                        <button class="btn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 統計面板 -->
+            <div class="panel stats-panel">
+                <div class="panel-header">
+                    <i class="fas fa-chart-line"></i>
+                    協作統計
+                </div>
+                <div class="panel-content">
+                    <div class="stat-item">
+                        <span id="codeLength" class="stat-value">0</span>
+                        <div class="stat-label">代碼行數</div>
+                    </div>
+                    <div class="stat-item">
+                        <span id="editCount" class="stat-value">0</span>
+                        <div class="stat-label">編輯次數</div>
+                    </div>
+                    <div class="stat-item">
+                        <span id="collaborationTime" class="stat-value">0</span>
+                        <div class="stat-label">協作時間(分鐘)</div>
+                    </div>
+                    <div class="stat-item">
+                        <span id="syncDelay" class="stat-value">--</span>
+                        <div class="stat-label">同步延遲(秒)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 同步指示器 -->
+    <div id="syncIndicator" class="sync-indicator">
+        <i class="fas fa-sync-alt"></i>
+        正在同步代碼...
+    </div>
+
+    <script>
+        // 全局變量
+        let isConnected = false;
+        let currentUserId = '';
+        let currentUserName = '';
+        let currentRoom = '';
+        let lastVersion = 0;
+        let pollInterval = null;
+        let editCount = 0;
+        let collaborationStartTime = null;
+        let lastCodeContent = '';
+        let isUpdatingFromServer = false;
+        
+        // 用戶顏色
+        const USER_COLORS = [
+            '#e74c3c', '#3498db', '#2ecc71', '#f39c12', 
+            '#9b59b6', '#1abc9c', '#34495e', '#e67e22',
+            '#f1c40f', '#2ecc71', '#3498db', '#9b59b6'
+        ];
+        
+        // API端點
+        const API_ENDPOINT = '/collaboration/code_sync_handler.php';
+        
+        // DOM元素
+        const connectBtn = document.getElementById('connectBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const roomCodeInput = document.getElementById('roomCode');
+        const userNameInput = document.getElementById('userName');
+        const codeEditor = document.getElementById('codeEditor');
+        const versionInfo = document.getElementById('versionInfo');
+        const userList = document.getElementById('userList');
+        const userCount = document.getElementById('userCount');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const syncIndicator = document.getElementById('syncIndicator');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 生成用戶ID
+            currentUserId = 'user_' + Math.random().toString(36).substr(2, 9);
+            
+            // 設置默認用戶名
+            const computerName = navigator.platform.includes('Win') ? '桌電' : 
+                               navigator.platform.includes('Mac') ? 'Mac' : '筆電';
+            userNameInput.value = `${computerName}_${currentUserId.substr(-4)}`;
+            
+            // 事件監聽器
+            connectBtn.addEventListener('click', toggleConnection);
+            
+            // 代碼編輯器事件
+            codeEditor.addEventListener('input', debounce(handleCodeChange, 1000));
+            codeEditor.addEventListener('selectionchange', handleCursorChange);
+            
+            // 聊天輸入事件
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // 統計更新
+            setInterval(updateStats, 1000);
+            
+            addSystemMessage('歡迎使用Python協作教學平台！請輸入房間代碼和用戶名稱開始協作。');
+        });
+        
+        // 防抖函數
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // 切換連接狀態
+        async function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                await connect();
+            }
+        }
+        
+        // 連接到協作會話
+        async function connect() {
+            const roomCode = roomCodeInput.value.trim();
+            const userName = userNameInput.value.trim();
+            
+            if (!roomCode || !userName) {
+                alert('請輸入房間代碼和用戶名稱！');
+                return;
+            }
+            
+            try {
+                updateConnectionStatus('connecting', '正在連接...');
+                connectBtn.disabled = true;
+                
+                currentRoom = roomCode;
+                currentUserName = userName;
+                
+                // 發送加入房間事件
+                await sendUpdate('user_join', {});
+                
+                // 開始輪詢更新
+                startPolling();
+                
+                updateConnectionStatus('connected', '已連接');
+                connectBtn.innerHTML = '<i class="fas fa-unlink"></i><span>斷開連接</span>';
+                connectBtn.classList.add('connected');
+                connectBtn.disabled = false;
+                isConnected = true;
+                
+                // 記錄協作開始時間
+                collaborationStartTime = Date.now();
+                
+                addSystemMessage(`用戶 ${userName} 已加入房間 ${roomCode}`);
+                
+            } catch (error) {
+                console.error('連接失敗:', error);
+                updateConnectionStatus('disconnected', '連接失敗');
+                connectBtn.disabled = false;
+                alert('連接失敗：' + error.message);
+            }
+        }
+        
+        // 斷開連接
+        async function disconnect() {
+            try {
+                // 發送離開房間事件
+                await sendUpdate('user_leave', {});
+                
+                // 停止輪詢
+                stopPolling();
+                
+                isConnected = false;
+                updateConnectionStatus('disconnected', '未連接');
+                connectBtn.innerHTML = '<i class="fas fa-plug"></i><span>連接協作</span>';
+                connectBtn.classList.remove('connected');
+                
+                // 清空用戶列表
+                userList.innerHTML = '';
+                userCount.textContent = '0';
+                
+                addSystemMessage(`用戶 ${currentUserName} 已離開房間`);
+                
+            } catch (error) {
+                console.error('斷開連接時發生錯誤:', error);
+            }
+        }
+        
+        // 開始輪詢更新
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    await getUpdates();
+                } catch (error) {
+                    console.error('輪詢更新失敗:', error);
+                }
+            }, 3000); // 每3秒輪詢一次
+            
+            // 立即執行一次
+            getUpdates();
+        }
+        
+        // 停止輪詢
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+        
+        // 獲取更新
+        async function getUpdates() {
+            if (!isConnected) return;
+            
+            try {
+                const response = await fetch(API_ENDPOINT + '?action=get_updates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        room: currentRoom,
+                        userId: currentUserId,
+                        userName: currentUserName,
+                        lastVersion: lastVersion
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    processUpdates(data.updates);
+                    lastVersion = data.latestVersion || lastVersion;
+                    
+                    // 更新同步延遲
+                    const delay = (Date.now() - data.serverTimestamp) / 1000;
+                    document.getElementById('syncDelay').textContent = delay.toFixed(1);
+                } else {
+                    console.error('獲取更新失敗:', data.error);
+                }
+                
+            } catch (error) {
+                console.error('獲取更新時發生錯誤:', error);
+            }
+        }
+        
+        // 處理更新
+        function processUpdates(updates) {
+            for (const update of updates) {
+                switch (update.type) {
+                    case 'code_change':
+                        if (update.userId !== currentUserId) {
+                            updateCodeFromServer(update.data.code, update.data.version);
+                            showSyncIndicator();
+                        }
+                        break;
+                        
+                    case 'active_users_list':
+                        updateUserList(update.data);
+                        break;
+                        
+                    case 'cursor_change':
+                        if (update.userId !== currentUserId) {
+                            updateUserCursor(update.userId, update.userName, update.data.cursor);
+                        }
+                        break;
+                        
+                    case 'chat_message':
+                        addChatMessage(update.userName, update.data.message, new Date(update.timestamp));
+                        break;
+                }
+            }
+        }
+        
+        // 發送更新
+        async function sendUpdate(type, data) {
+            if (!isConnected && type !== 'user_join') return;
+            
+            try {
+                const response = await fetch(API_ENDPOINT + '?action=send_update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        room: currentRoom,
+                        userId: currentUserId,
+                        userName: currentUserName,
+                        type: type,
+                        data: data
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (type === 'code_change' && result.newVersion) {
+                        lastVersion = result.newVersion;
+                        versionInfo.textContent = `(版本: ${lastVersion})`;
+                    }
+                } else {
+                    console.error('發送更新失敗:', result.error);
+                }
+                
+            } catch (error) {
+                console.error('發送更新時發生錯誤:', error);
+                throw error;
+            }
+        }
+        
+        // 處理代碼更改
+        async function handleCodeChange() {
+            if (!isConnected || isUpdatingFromServer) return;
+            
+            const newCode = codeEditor.value;
+            if (newCode === lastCodeContent) return;
+            
+            lastCodeContent = newCode;
+            editCount++;
+            
+            try {
+                await sendUpdate('code_change', {
+                    code: newCode,
+                    version: lastVersion + 1
+                });
+                
+                showSyncIndicator();
+                
+            } catch (error) {
+                console.error('發送代碼更改失敗:', error);
+            }
+        }
+        
+        // 從服務器更新代碼
+        function updateCodeFromServer(newCode, version) {
+            isUpdatingFromServer = true;
+            
+            // 保存當前光標位置
+            const cursorPos = codeEditor.selectionStart;
+            
+            codeEditor.value = newCode;
+            lastCodeContent = newCode;
+            lastVersion = version;
+            versionInfo.textContent = `(版本: ${version})`;
+            
+            // 恢復光標位置
+            codeEditor.setSelectionRange(cursorPos, cursorPos);
+            
+            setTimeout(() => {
+                isUpdatingFromServer = false;
+            }, 100);
+        }
+        
+        // 處理光標更改
+        function handleCursorChange() {
+            if (!isConnected || isUpdatingFromServer) return;
+            
+            const cursorPos = {
+                start: codeEditor.selectionStart,
+                end: codeEditor.selectionEnd,
+                line: getLineNumber(codeEditor.value, codeEditor.selectionStart)
+            };
+            
+            sendUpdate('cursor_change', { cursor: cursorPos });
+        }
+        
+        // 獲取行號
+        function getLineNumber(text, position) {
+            return text.substring(0, position).split('\n').length;
+        }
+        
+        // 更新用戶列表
+        function updateUserList(users) {
+            userList.innerHTML = '';
+            userCount.textContent = users.length;
+            
+            users.forEach((user, index) => {
+                const userElement = document.createElement('div');
+                userElement.className = 'user-item';
+                
+                const color = USER_COLORS[index % USER_COLORS.length];
+                
+                userElement.innerHTML = `
+                    <div class="user-avatar" style="background: ${color}">
+                        ${user.userName.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">${user.userName}</div>
+                        <div class="user-status">在線活躍</div>
+                    </div>
+                    <div class="user-cursor"></div>
+                `;
+                
+                userList.appendChild(userElement);
+            });
+        }
+        
+        // 發送聊天消息
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message || !isConnected) return;
+            
+            try {
+                // 在本地立即顯示消息
+                addChatMessage(currentUserName, message, new Date());
+                
+                // 清空輸入框
+                chatInput.value = '';
+                
+                // 發送到服務器
+                await sendUpdate('chat_message', { message: message });
+                
+            } catch (error) {
+                console.error('發送消息失敗:', error);
+            }
+        }
+        
+        // 添加聊天消息
+        function addChatMessage(author, content, timestamp) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-author">${author}</span>
+                    <span class="message-time">${timestamp.toLocaleTimeString()}</span>
+                </div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 添加系統消息
+        function addSystemMessage(content) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message system';
+            
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-author">系統</span>
+                    <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 更新連接狀態
+        function updateConnectionStatus(status, text) {
+            connectionStatus.className = `status-indicator ${status}`;
+            connectionStatus.innerHTML = `<i class="fas fa-circle"></i><span>${text}</span>`;
+        }
+        
+        // 顯示同步指示器
+        function showSyncIndicator() {
+            syncIndicator.classList.add('show');
+            setTimeout(() => {
+                syncIndicator.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 更新統計信息
+        function updateStats() {
+            // 代碼行數
+            const lines = codeEditor.value.split('\n').length;
+            document.getElementById('codeLength').textContent = lines;
+            
+            // 編輯次數
+            document.getElementById('editCount').textContent = editCount;
+            
+            // 協作時間
+            if (collaborationStartTime) {
+                const minutes = Math.floor((Date.now() - collaborationStartTime) / 60000);
+                document.getElementById('collaborationTime').textContent = minutes;
+            }
+        }
+        
+        // 運行代碼
+        function runCode() {
+            const code = codeEditor.value.trim();
+            if (!code) {
+                alert('請先輸入Python代碼！');
+                return;
+            }
+            
+            addSystemMessage('代碼執行功能需要後端Python環境支援，目前版本為演示模式。');
+            addChatMessage('系統', `代碼已提交執行，共 ${code.split('\n').length} 行`, new Date());
+        }
+        
+        // 保存代碼
+        function saveCode() {
+            const code = codeEditor.value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `python_code_${currentRoom}_${new Date().getTime()}.py`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addSystemMessage('代碼已保存到本地文件。');
+        }
+        
+        // AI助教功能
+        async function askAI(type) {
+            const code = codeEditor.value.trim();
+            const aiResponse = document.getElementById('aiResponse');
+            
+            let question = '';
+            switch (type) {
+                case 'explain':
+                    question = '請解釋這段Python程式碼的功能和作用';
+                    break;
+                case 'debug':
+                    question = '請檢查這段程式碼是否有錯誤或需要改進的地方';
+                    break;
+                case 'improve':
+                    question = '請提供這段程式碼的優化建議和改進方案';
+                    break;
+                case 'question':
+                    question = prompt('請輸入您想問AI助教的問題：');
+                    if (!question) return;
+                    break;
+            }
+            
+            // 模擬AI響應
+            const responses = {
+                'explain': `這段Python程式碼主要功能：
+                
+🔍 程式碼分析：
+• 使用了基本的Python語法和結構
+• 包含變數定義、函數和條件判斷
+• 採用了良好的代碼風格和命名規則
+
+💡 教學要點：
+• 變數的使用和作用域
+• 函數的定義和調用
+• 條件控制結構的應用
+
+這是一個很好的Python學習示例！`,
+
+                'debug': `代碼檢查結果：
+
+✅ 語法檢查：未發現明顯語法錯誤
+⚠️ 建議優化：
+• 可以添加更多註釋說明
+• 變數命名可以更具描述性
+• 建議添加異常處理機制
+
+🔧 改進建議：
+• 使用type hints提高代碼可讀性
+• 考慮將複雜邏輯拆分為更小的函數
+• 添加docstring文檔字符串`,
+
+                'improve': `代碼優化建議：
+
+🚀 性能優化：
+• 使用列表推導式替代普通循環
+• 考慮使用生成器節省內存
+• 優化算法複雜度
+
+📝 代碼質量：
+• 遵循PEP 8編碼規範
+• 增加類型提示
+• 完善錯誤處理
+
+🎯 最佳實踐：
+• 使用meaningful的變數名
+• 保持函數功能單一
+• 添加單元測試`,
+
+                'question': `根據您的問題，我的回答是：
+
+🤖 AI助教分析：
+${question}
+
+這是一個很好的問題！在Python程式設計中，理解這個概念對於提升編程技能很重要。
+
+💡 建議：
+• 多動手實踐
+• 查閱官方文檔
+• 與同伴討論交流
+
+如果需要更詳細的解釋，請隨時提問！`
+            };
+            
+            aiResponse.style.display = 'block';
+            aiResponse.innerHTML = responses[type];
+            
+            // 添加到聊天記錄
+            addChatMessage('AI助教', responses[type].replace(/\n/g, '<br>'), new Date());
+        }
+    </script>
+</body>
+</html> 

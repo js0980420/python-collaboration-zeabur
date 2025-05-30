@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤝 多人協作編程 - Python教學平台</title>
+    
+    <!-- CSS框架 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            padding: 20px;
+            min-height: calc(100vh - 20px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connection-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-connected { background: var(--success-color); }
+        .status-connecting { background: var(--warning-color); }
+        .status-disconnected { background: var(--danger-color); }
+
+        .editor-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 500px;
+            position: relative;
+        }
+
+        .CodeMirror {
+            height: 100%;
+            font-size: 14px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+
+        .user-cursor {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .user-cursor::after {
+            content: attr(data-user);
+            position: absolute;
+            top: -25px;
+            left: 0;
+            background: inherit;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .user-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .chat-container {
+            height: 300px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .chat-message.own {
+            background: var(--secondary-color);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .chat-message.other {
+            background: white;
+            border: 1px solid #e0e0e0;
+        }
+
+        .chat-input {
+            border-top: 1px solid #e0e0e0;
+            padding: 10px;
+            background: white;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .ai-panel {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .ai-response {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 2px;
+        }
+
+        .btn-ai:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .room-controls {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success { background: var(--success-color); }
+        .notification.error { background: var(--danger-color); }
+        .notification.info { background: var(--info-color); }
+
+        .version-info {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 5px;
+                padding: 10px;
+            }
+            
+            .editor-container {
+                height: 300px;
+            }
+            
+            .chat-container {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- 標題欄 -->
+            <div class="header">
+                <div>
+                    <h3><i class="fas fa-users"></i> 多人協作編程</h3>
+                    <small>Python教學平台 - 即時協作學習</small>
+                </div>
+                <div class="connection-status status-disconnected" id="connectionStatus">
+                    <i class="fas fa-circle"></i> 未連接
+                </div>
+            </div>
+
+            <!-- 房間控制 -->
+            <div class="room-controls">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="roomIdInput" placeholder="輸入房間ID">
+                            <input type="text" class="form-control" id="userNameInput" placeholder="您的名稱">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" onclick="joinRoom()">
+                            <i class="fas fa-sign-in-alt"></i> 加入房間
+                        </button>
+                        <button class="btn btn-secondary" onclick="createRoom()">
+                            <i class="fas fa-plus"></i> 創建房間
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="version-info" id="versionInfo">
+                            版本: 0 | 房間: 未加入
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 程式碼編輯器 -->
+                <div class="col-lg-8">
+                    <div class="editor-container">
+                        <textarea id="codeEditor" placeholder="開始編寫您的Python程式碼...">
+# 歡迎來到協作編程！
+# 邀請朋友一起編寫程式碼
+
+def hello_collaboration():
+    print("多人協作，學習更有趣！")
+    return "開始您的編程之旅"
+
+# 試試看邀請朋友加入同一個房間
+hello_collaboration()
+                        </textarea>
+                    </div>
+                    
+                    <!-- AI助手面板 -->
+                    <div class="ai-panel">
+                        <h5><i class="fas fa-robot"></i> AI協作助手</h5>
+                        <div class="mb-3">
+                            <button class="btn-ai" onclick="requestAI('analyze_code')">
+                                <i class="fas fa-search"></i> 分析程式碼
+                            </button>
+                            <button class="btn-ai" onclick="requestAI('syntax_check')">
+                                <i class="fas fa-bug"></i> 語法檢查
+                            </button>
+                            <button class="btn-ai" onclick="requestAI('collaboration_analysis')">
+                                <i class="fas fa-users"></i> 協作建議
+                            </button>
+                        </div>
+                        <div id="aiResponse" class="ai-response" style="display: none;">
+                            <!-- AI回應將顯示在這裡 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 側邊欄 -->
+                <div class="col-lg-4">
+                    <!-- 在線用戶 -->
+                    <div class="sidebar mb-3">
+                        <h5><i class="fas fa-users"></i> 在線用戶 (<span id="userCount">0</span>)</h5>
+                        <div class="user-list" id="userList">
+                            <!-- 用戶列表將動態生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 聊天室 -->
+                    <div class="sidebar">
+                        <h5><i class="fas fa-comments"></i> 團隊聊天</h5>
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="chat-message other">
+                                    <strong>系統：</strong> 歡迎來到協作聊天室！
+                                </div>
+                            </div>
+                            <div class="chat-input">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="chatInput" 
+                                           placeholder="輸入訊息..." onkeypress="handleChatKeyPress(event)">
+                                    <button class="btn btn-primary" onclick="sendChatMessage()">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notificationContainer"></div>
+
+    <!-- JavaScript庫 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+
+    <script>
+        // 全局變數
+        let ws = null;
+        let editor = null;
+        let currentUserId = null;
+        let currentRoomId = null;
+        let currentVersion = 0;
+        let isConnected = false;
+        let userCursors = new Map();
+        let aiRequestCounter = 0;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEditor();
+            connectWebSocket();
+            
+            // 自動生成房間ID
+            document.getElementById('roomIdInput').value = 'room_' + Math.random().toString(36).substr(2, 6);
+            document.getElementById('userNameInput').value = '用戶' + Math.floor(Math.random() * 1000);
+        });
+
+        // 初始化程式碼編輯器
+        function initializeEditor() {
+            editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                indentWithTabs: false,
+                lineWrapping: true
+            });
+
+            // 監聽程式碼變更
+            editor.on('change', function(instance, change) {
+                if (change.origin !== 'setValue' && isConnected && currentRoomId) {
+                    currentVersion++;
+                    sendMessage({
+                        type: 'code_change',
+                        code: editor.getValue(),
+                        version: currentVersion,
+                        change: change
+                    });
+                    updateVersionInfo();
+                }
+            });
+
+            // 監聽游標變更
+            editor.on('cursorActivity', function() {
+                if (isConnected && currentRoomId) {
+                    const cursor = editor.getCursor();
+                    sendMessage({
+                        type: 'cursor_change',
+                        cursor: cursor
+                    });
+                }
+            });
+        }
+
+        // 連接WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            updateConnectionStatus('connecting', '連接中...');
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = function() {
+                isConnected = true;
+                updateConnectionStatus('connected', '已連接');
+                showNotification('WebSocket連接成功！', 'success');
+            };
+
+            ws.onmessage = function(event) {
+                try {
+                    const message = JSON.parse(event.data);
+                    handleMessage(message);
+                } catch (error) {
+                    console.error('消息解析錯誤:', error);
+                }
+            };
+
+            ws.onclose = function() {
+                isConnected = false;
+                updateConnectionStatus('disconnected', '連接斷開');
+                showNotification('連接已斷開，正在重連...', 'error');
+                
+                // 自動重連
+                setTimeout(connectWebSocket, 3000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket錯誤:', error);
+                updateConnectionStatus('disconnected', '連接錯誤');
+            };
+        }
+
+        // 處理收到的消息
+        function handleMessage(message) {
+            switch (message.type) {
+                case 'welcome':
+                    currentUserId = message.userId;
+                    showNotification(`歡迎！您的ID: ${message.userId}`, 'info');
+                    break;
+
+                case 'room_joined':
+                    currentRoomId = message.roomId;
+                    currentVersion = message.version;
+                    editor.setValue(message.code);
+                    updateUserList(message.users);
+                    updateVersionInfo();
+                    showNotification(`成功加入房間: ${message.roomId}`, 'success');
+                    break;
+
+                case 'user_joined':
+                    addUserToList(message.user);
+                    showNotification(`${message.user.name} 加入了房間`, 'info');
+                    break;
+
+                case 'user_left':
+                    removeUserFromList(message.userId);
+                    removeUserCursor(message.userId);
+                    showNotification(`${message.userName} 離開了房間`, 'info');
+                    break;
+
+                case 'code_changed':
+                    if (message.version > currentVersion) {
+                        currentVersion = message.version;
+                        editor.setValue(message.code);
+                        updateVersionInfo();
+                        showNotification(`${message.userName} 更新了程式碼`, 'info');
+                    }
+                    break;
+
+                case 'code_conflict':
+                    currentVersion = message.version;
+                    editor.setValue(message.code);
+                    updateVersionInfo();
+                    showNotification('程式碼衝突，已同步最新版本', 'error');
+                    break;
+
+                case 'cursor_changed':
+                    updateUserCursor(message.userId, message.userName, message.cursor);
+                    break;
+
+                case 'chat_message':
+                    addChatMessage(message);
+                    break;
+
+                case 'ai_processing':
+                    showAIProcessing();
+                    break;
+
+                case 'ai_response':
+                    showAIResponse(message.response);
+                    break;
+
+                case 'ai_error':
+                    showAIError(message.error);
+                    break;
+
+                case 'collaboration_suggestion':
+                    showCollaborationSuggestion(message.suggestion, message.fromUser);
+                    break;
+
+                case 'pong':
+                    // 心跳回應
+                    break;
+
+                default:
+                    console.log('未處理的消息類型:', message.type);
+            }
+        }
+
+        // 發送消息
+        function sendMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(message));
+            }
+        }
+
+        // 創建房間
+        function createRoom() {
+            const roomId = 'room_' + Math.random().toString(36).substr(2, 8);
+            document.getElementById('roomIdInput').value = roomId;
+            joinRoom();
+        }
+
+        // 加入房間
+        function joinRoom() {
+            const roomId = document.getElementById('roomIdInput').value.trim();
+            const userName = document.getElementById('userNameInput').value.trim();
+
+            if (!roomId) {
+                showNotification('請輸入房間ID', 'error');
+                return;
+            }
+
+            if (!userName) {
+                showNotification('請輸入您的名稱', 'error');
+                return;
+            }
+
+            if (!isConnected) {
+                showNotification('請等待連接建立', 'error');
+                return;
+            }
+
+            sendMessage({
+                type: 'join_room',
+                roomId: roomId,
+                userName: userName
+            });
+        }
+
+        // 發送聊天消息
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (!message || !currentRoomId) return;
+
+            sendMessage({
+                type: 'chat_message',
+                message: message
+            });
+
+            input.value = '';
+        }
+
+        // 處理聊天輸入按鍵
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 請求AI協助
+        function requestAI(action) {
+            if (!currentRoomId) {
+                showNotification('請先加入房間', 'error');
+                return;
+            }
+
+            const requestId = ++aiRequestCounter;
+            sendMessage({
+                type: 'ai_request',
+                action: action,
+                requestId: requestId,
+                data: {
+                    code: editor.getValue()
+                }
+            });
+        }
+
+        // 更新連接狀態
+        function updateConnectionStatus(status, text) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.className = `connection-status status-${status}`;
+            statusElement.innerHTML = `<i class="fas fa-circle"></i> ${text}`;
+        }
+
+        // 更新版本信息
+        function updateVersionInfo() {
+            const versionInfo = document.getElementById('versionInfo');
+            versionInfo.textContent = `版本: ${currentVersion} | 房間: ${currentRoomId || '未加入'}`;
+        }
+
+        // 更新用戶列表
+        function updateUserList(users) {
+            const userList = document.getElementById('userList');
+            const userCount = document.getElementById('userCount');
+            
+            userList.innerHTML = '';
+            userCount.textContent = users.length;
+
+            users.forEach(user => {
+                addUserToList(user);
+            });
+        }
+
+        // 添加用戶到列表
+        function addUserToList(user) {
+            const userList = document.getElementById('userList');
+            const userCount = document.getElementById('userCount');
+            
+            const userElement = document.createElement('div');
+            userElement.className = 'user-item';
+            userElement.id = `user-${user.id}`;
+            
+            const isCurrentUser = user.id === currentUserId;
+            const avatar = user.name.charAt(0).toUpperCase();
+            
+            userElement.innerHTML = `
+                <div class="user-avatar">${avatar}</div>
+                <div>
+                    <div class="fw-bold">${user.name} ${isCurrentUser ? '(您)' : ''}</div>
+                    <small class="text-muted">在線</small>
+                </div>
+            `;
+            
+            userList.appendChild(userElement);
+            userCount.textContent = userList.children.length;
+        }
+
+        // 從列表移除用戶
+        function removeUserFromList(userId) {
+            const userElement = document.getElementById(`user-${userId}`);
+            if (userElement) {
+                userElement.remove();
+                const userCount = document.getElementById('userCount');
+                userCount.textContent = document.getElementById('userList').children.length;
+            }
+        }
+
+        // 更新用戶游標
+        function updateUserCursor(userId, userName, cursor) {
+            if (userId === currentUserId) return;
+
+            // 移除舊游標
+            removeUserCursor(userId);
+
+            // 創建新游標
+            const cursorElement = document.createElement('div');
+            cursorElement.className = 'user-cursor';
+            cursorElement.id = `cursor-${userId}`;
+            cursorElement.setAttribute('data-user', userName);
+            
+            // 設置游標顏色
+            const colors = ['#e74c3c', '#f39c12', '#27ae60', '#9b59b6', '#34495e'];
+            const color = colors[userId.charCodeAt(userId.length - 1) % colors.length];
+            cursorElement.style.backgroundColor = color;
+
+            // 計算游標位置
+            const coords = editor.cursorCoords(cursor, 'local');
+            cursorElement.style.left = coords.left + 'px';
+            cursorElement.style.top = coords.top + 'px';
+
+            // 添加到編輯器
+            const editorElement = document.querySelector('.CodeMirror');
+            editorElement.appendChild(cursorElement);
+
+            userCursors.set(userId, cursorElement);
+        }
+
+        // 移除用戶游標
+        function removeUserCursor(userId) {
+            const cursor = userCursors.get(userId);
+            if (cursor) {
+                cursor.remove();
+                userCursors.delete(userId);
+            }
+        }
+
+        // 添加聊天消息
+        function addChatMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            
+            const isOwnMessage = message.userId === currentUserId;
+            messageElement.className = `chat-message ${isOwnMessage ? 'own' : 'other'}`;
+            
+            const time = new Date(message.timestamp).toLocaleTimeString();
+            messageElement.innerHTML = `
+                <div><strong>${message.userName}:</strong> ${message.message}</div>
+                <small>${time}</small>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 顯示AI處理中
+        function showAIProcessing() {
+            const aiResponse = document.getElementById('aiResponse');
+            aiResponse.style.display = 'block';
+            aiResponse.innerHTML = `
+                <div class="text-center">
+                    <div class="loading-spinner"></div>
+                    <div class="mt-2">AI正在分析中...</div>
+                </div>
+            `;
+        }
+
+        // 顯示AI回應
+        function showAIResponse(response) {
+            const aiResponse = document.getElementById('aiResponse');
+            aiResponse.style.display = 'block';
+            
+            if (response.success) {
+                let content = '<h6><i class="fas fa-robot"></i> AI分析結果</h6>';
+                
+                if (response.data.score) {
+                    content += `<div class="mb-2"><strong>評分:</strong> ${response.data.score}/100</div>`;
+                }
+                
+                if (response.data.suggestions) {
+                    content += '<div class="mb-2"><strong>建議:</strong><ul>';
+                    response.data.suggestions.forEach(suggestion => {
+                        content += `<li>${suggestion}</li>`;
+                    });
+                    content += '</ul></div>';
+                }
+                
+                if (response.data.teamEfficiency) {
+                    content += `<div class="mb-2"><strong>團隊效率:</strong> ${response.data.teamEfficiency}</div>`;
+                }
+                
+                aiResponse.innerHTML = content;
+            } else {
+                aiResponse.innerHTML = `
+                    <h6><i class="fas fa-exclamation-triangle"></i> AI錯誤</h6>
+                    <div>${response.error || '未知錯誤'}</div>
+                `;
+            }
+        }
+
+        // 顯示AI錯誤
+        function showAIError(error) {
+            const aiResponse = document.getElementById('aiResponse');
+            aiResponse.style.display = 'block';
+            aiResponse.innerHTML = `
+                <h6><i class="fas fa-exclamation-triangle"></i> AI服務錯誤</h6>
+                <div>${error}</div>
+            `;
+        }
+
+        // 顯示協作建議
+        function showCollaborationSuggestion(suggestion, fromUser) {
+            showNotification(`${fromUser} 分享了協作建議`, 'info');
+            
+            // 可以在這裡添加更詳細的建議顯示
+            console.log('協作建議:', suggestion);
+        }
+
+        // 顯示通知
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            container.appendChild(notification);
+            
+            // 顯示動畫
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // 自動隱藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // 心跳檢測
+        setInterval(() => {
+            if (isConnected) {
+                sendMessage({ type: 'ping' });
+            }
+        }, 30000);
+
+        // 頁面關閉時清理
+        window.addEventListener('beforeunload', function() {
+            if (currentRoomId) {
+                sendMessage({ type: 'leave_room' });
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python 協作測試頁面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .main-content {
+            display: flex;
+            height: 600px;
+        }
+        .editor-section {
+            flex: 2;
+            padding: 20px;
+            border-right: 1px solid #eee;
+        }
+        .info-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .code-editor {
+            width: 100%;
+            height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            resize: vertical;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.online {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .user-list {
+            margin: 10px 0;
+        }
+        .user-item {
+            padding: 5px 10px;
+            margin: 2px 0;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn.success {
+            background-color: #28a745;
+        }
+        .btn.danger {
+            background-color: #dc3545;
+        }
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐍 Python 協作教學平台 - 測試頁面</h1>
+            <p>測試 HTTP 輪詢版本的協作功能</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="editor-section">
+                <h3>📝 Python 代碼編輯器</h3>
+                <textarea id="codeEditor" class="code-editor" placeholder="正在載入代碼..."></textarea>
+                
+                <div class="controls">
+                    <button class="btn success" onclick="saveCode()">💾 保存代碼</button>
+                    <button class="btn" onclick="loadCode()">🔄 重新載入</button>
+                    <button class="btn" onclick="clearEditor()">🗑️ 清空編輯器</button>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>📊 系統狀態</h3>
+                <div id="connectionStatus" class="status">🔗 正在連接...</div>
+                
+                <h4>👥 活躍用戶 (<span id="userCount">0</span>)</h4>
+                <div id="userList" class="user-list"></div>
+                
+                <h4>🔧 控制面板</h4>
+                <div class="controls">
+                    <button class="btn" onclick="testConnection()">🔍 測試連接</button>
+                    <button class="btn" onclick="forceUpdate()">⚡ 強制更新</button>
+                    <button class="btn danger" onclick="clearLog()">🧹 清除日誌</button>
+                </div>
+                
+                <h4>📋 日誌</h4>
+                <div id="logArea" class="log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentVersion = 0;
+        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        let userName = 'TestUser_' + Date.now().toString().substr(-4);
+        let roomCode = 'test_room';
+        let isPolling = false;
+        let pollInterval = null;
+
+        // 日誌函數
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('logArea');
+            const color = type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : '#74c0fc';
+            logArea.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // **修復：定義 updateUserCursor 函數**
+        function updateUserCursor(userId, cursorData) {
+            log(`🖱️ 用戶 ${userId} 游標更新: line ${cursorData.line || 0}, ch ${cursorData.ch || 0}`, 'info');
+            // 這裡可以添加實際的游標顯示邏輯
+        }
+
+        // 更新連接狀態
+        function updateConnectionStatus(isOnline, message) {
+            const statusElement = document.getElementById('connectionStatus');
+            if (isOnline) {
+                statusElement.className = 'status online';
+                statusElement.innerHTML = '🟢 ' + message;
+            } else {
+                statusElement.className = 'status error';
+                statusElement.innerHTML = '🔴 ' + message;
+            }
+        }
+
+        // 更新用戶列表
+        function updateUserList(users) {
+            const userList = document.getElementById('userList');
+            const userCount = document.getElementById('userCount');
+            
+            userList.innerHTML = '';
+            userCount.textContent = users.length;
+            
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.textContent = `👤 ${user.userName} (${user.userId.substr(0, 8)})`;
+                userList.appendChild(userItem);
+            });
+        }
+
+        // 發送請求到後端
+        async function sendRequest(action, data = {}) {
+            try {
+                const requestData = {
+                    room: roomCode,
+                    userId: userId,
+                    userName: userName,
+                    ...data
+                };
+
+                const response = await fetch(`code_sync_handler.php?action=${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                log(`❌ 請求失敗 (${action}): ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // 處理更新
+        function processUpdates(updates) {
+            updates.forEach(update => {
+                switch (update.type) {
+                    case 'code_change':
+                        if (update.userId !== userId) {
+                            document.getElementById('codeEditor').value = update.data.code;
+                            currentVersion = update.data.version;
+                            log(`📝 代碼已更新 (版本 ${currentVersion}) by ${update.userName}`, 'success');
+                        }
+                        break;
+                    
+                    case 'cursor_change':
+                        updateUserCursor(update.userId, update.data.cursor);
+                        break;
+                    
+                    case 'active_users_list':
+                        updateUserList(update.data);
+                        break;
+                    
+                    default:
+                        log(`📨 收到更新: ${update.type}`, 'info');
+                }
+            });
+        }
+
+        // 獲取更新
+        async function getUpdates() {
+            try {
+                const result = await sendRequest('get_updates', {
+                    lastVersion: currentVersion
+                });
+
+                if (result.success) {
+                    updateConnectionStatus(true, '已連接並同步');
+                    if (result.updates && result.updates.length > 0) {
+                        processUpdates(result.updates);
+                    }
+                    currentVersion = result.latestVersion || currentVersion;
+                } else {
+                    updateConnectionStatus(false, result.error || '獲取更新失敗');
+                }
+            } catch (error) {
+                updateConnectionStatus(false, '連接失敗: ' + error.message);
+            }
+        }
+
+        // 發送代碼更新
+        async function sendCodeUpdate() {
+            try {
+                const code = document.getElementById('codeEditor').value;
+                const result = await sendRequest('send_update', {
+                    type: 'code_change',
+                    data: {
+                        code: code,
+                        version: currentVersion
+                    }
+                });
+
+                if (result.success) {
+                    currentVersion = result.newVersion || currentVersion;
+                    log(`✅ 代碼已保存 (版本 ${currentVersion})`, 'success');
+                } else {
+                    log(`❌ 保存失敗: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ 發送代碼失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 開始輪詢
+        function startPolling() {
+            if (isPolling) return;
+            
+            isPolling = true;
+            log(`🚀 開始輪詢 (用戶: ${userName}, 房間: ${roomCode})`, 'success');
+            
+            // 立即獲取一次更新
+            getUpdates();
+            
+            // 每2秒輪詢一次
+            pollInterval = setInterval(getUpdates, 2000);
+        }
+
+        // 停止輪詢
+        function stopPolling() {
+            if (!isPolling) return;
+            
+            isPolling = false;
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+            log(`⏹️ 已停止輪詢`, 'info');
+            updateConnectionStatus(false, '未連接');
+        }
+
+        // 控制函數
+        function saveCode() {
+            sendCodeUpdate();
+        }
+
+        function loadCode() {
+            log('🔄 重新載入代碼...', 'info');
+            getUpdates();
+        }
+
+        function clearEditor() {
+            document.getElementById('codeEditor').value = '';
+            log('🗑️ 編輯器已清空', 'info');
+        }
+
+        function testConnection() {
+            log('🔍 測試連接...', 'info');
+            fetch('code_sync_handler.php?action=status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        log(`✅ 連接測試成功! 服務器時間: ${data.server_time}`, 'success');
+                        log(`📊 快照總數: ${data.total_snapshots}, 活躍用戶: ${data.active_users_total}`, 'info');
+                    } else {
+                        log(`❌ 連接測試失敗: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    log(`❌ 連接測試失敗: ${error.message}`, 'error');
+                });
+        }
+
+        function forceUpdate() {
+            log('⚡ 強制更新...', 'info');
+            currentVersion = 0; // 重置版本，強制獲取最新代碼
+            getUpdates();
+        }
+
+        function clearLog() {
+            document.getElementById('logArea').innerHTML = '';
+        }
+
+        // 編輯器事件
+        document.getElementById('codeEditor').addEventListener('input', function() {
+            // 延遲發送更新，避免過於頻繁
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = setTimeout(() => {
+                sendCodeUpdate();
+            }, 1000);
+        });
+
+        // 頁面載入時初始化
+        window.addEventListener('load', function() {
+            log('🚀 Python 協作測試頁面已載入', 'success');
+            log(`👤 用戶ID: ${userId}`, 'info');
+            log(`🏠 房間代碼: ${roomCode}`, 'info');
+            
+            // 開始輪詢
+            startPolling();
+        });
+
+        // 頁面卸載時清理
+        window.addEventListener('beforeunload', function() {
+            stopPolling();
+            // 發送用戶離開事件
+            sendRequest('send_update', {
+                type: 'user_leave'
+            }).catch(() => {});
+        });
+    </script>
+</body>
+</html> 

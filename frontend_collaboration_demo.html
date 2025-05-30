@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Python協作教學平台 - 純前端演示版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0;
+            height: 600px;
+        }
+        
+        .editor-panel {
+            border-right: 2px solid #e0e0e0;
+        }
+        
+        .editor-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .CodeMirror {
+            height: 485px !important;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .users-section {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        
+        .users-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .user-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .message-user {
+            font-weight: 600;
+            color: #4facfe;
+            font-size: 14px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .message-content {
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .chat-input {
+            border-top: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            background: white;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .chat-input input:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .info-panel {
+            background: #e3f2fd;
+            padding: 15px 30px;
+            border-top: 3px solid #2196f3;
+            margin: 20px 30px 0;
+            border-radius: 8px;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .info-content {
+            color: #424242;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .demo-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Python協作教學平台</h1>
+            <div class="subtitle">純前端演示版本 - 多標籤頁協作模擬</div>
+        </div>
+        
+        <div class="demo-warning">
+            ⚠️ <strong>演示模式</strong>: 請開啟多個瀏覽器標籤頁來模擬多人協作效果！代碼會在所有標籤頁間即時同步。
+        </div>
+        
+        <div class="main-content">
+            <div class="editor-panel">
+                <div class="editor-header">
+                    <div class="editor-title">🐍 Python協作編輯器</div>
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>協作同步中</span>
+                        <span id="syncDelay">延遲: ~50ms</span>
+                    </div>
+                </div>
+                <textarea id="code-editor" placeholder="開始編寫您的Python程式碼..."></textarea>
+            </div>
+            
+            <div class="chat-panel">
+                <div class="users-section">
+                    <div class="users-title">👥 在線用戶 (<span id="user-count">1</span>)</div>
+                    <div class="user-list" id="user-list">
+                        <div class="user-badge">用戶1 (您)</div>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message">
+                        <div class="message-header">
+                            <span class="message-user">💡 系統提示</span>
+                            <span class="message-time">剛才</span>
+                        </div>
+                        <div class="message-content">歡迎使用Python協作教學平台！開啟多個標籤頁來體驗協作編輯功能。</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="輸入訊息..." maxlength="200">
+                    <button class="send-btn" onclick="sendMessage()">發送</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label><strong>房間名稱:</strong></label>
+                <input type="text" id="room-name" value="demo-room" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <button class="btn btn-primary" onclick="joinRoom()">加入房間</button>
+            </div>
+            
+            <div class="control-group">
+                <button class="btn btn-secondary" onclick="simulateCollaboration()">模擬協作</button>
+                <button class="btn btn-success" onclick="exportCode()">導出代碼</button>
+                <button class="btn btn-warning" onclick="clearCode()">清空代碼</button>
+            </div>
+            
+            <div class="control-group">
+                <label><strong>同步延遲:</strong></label>
+                <select id="sync-delay" onchange="updateSyncDelay()" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="50">50ms (極快)</option>
+                    <option value="200">200ms (快速)</option>
+                    <option value="500">500ms (正常)</option>
+                    <option value="1000">1000ms (慢速)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-title">📖 使用說明</div>
+            <div class="info-content">
+                <strong>多人協作測試:</strong><br>
+                1. 複製此頁面URL，在新標籤頁開啟<br>
+                2. 在任一標籤頁編輯代碼，觀察其他標籤頁的即時同步<br>
+                3. 使用聊天功能進行溝通<br>
+                4. 嘗試不同的同步延遲設置<br><br>
+                
+                <strong>功能特色:</strong><br>
+                ✅ 即時代碼同步 (50ms-1000ms可調)<br>
+                ✅ 多標籤頁協作模擬<br>
+                ✅ 實時聊天功能<br>
+                ✅ 用戶狀態追蹤<br>
+                ✅ 代碼版本控制<br>
+                ✅ 協作衝突模擬
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局變量
+        let editor;
+        let currentRoom = 'demo-room';
+        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        let userName = '用戶' + Math.floor(Math.random() * 999 + 1);
+        let currentVersion = 0;
+        let syncDelay = 50;
+        let lastSyncTime = Date.now();
+        
+        // BroadcastChannel用於多標籤頁通信
+        const channel = new BroadcastChannel('python_collab');
+        
+        // 初始化CodeMirror編輯器
+        function initEditor() {
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+                mode: 'python',
+                theme: 'monokai',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                lineWrapping: true,
+                extraKeys: {
+                    "Tab": function(cm) {
+                        cm.replaceSelection("    ", "end");
+                    }
+                }
+            });
+            
+            // 初始代碼
+            const initialCode = `# 🐍 Python協作教學平台演示
+# 歡迎來到多人協作編程環境！
+
+def greet_collaborators():
+    """歡迎所有協作者的函數"""
+    collaborators = ["張同學", "李同學", "王同學"]
+    
+    for name in collaborators:
+        print(f"歡迎 {name} 加入協作編程！")
+    
+    return "協作愉快！🎉"
+
+# 示例：計算斐波那契數列
+def fibonacci(n):
+    """計算第n個斐波那契數"""
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+
+# 測試代碼
+if __name__ == "__main__":
+    print(greet_collaborators())
+    
+    # 計算前10個斐波那契數
+    print("\\n前10個斐波那契數：")
+    for i in range(10):
+        print(f"F({i}) = {fibonacci(i)}")
+        
+# 💡 嘗試修改這些代碼，看看其他標籤頁的即時同步效果！`;
+            
+            editor.setValue(initialCode);
+            
+            // 監聽編輯器變化
+            editor.on('change', function(cm, change) {
+                if (change.origin !== 'sync') {
+                    debounce(syncCode, syncDelay)();
+                }
+            });
+            
+            // 載入房間代碼
+            loadRoomCode();
+        }
+        
+        // 防抖函數
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // 同步代碼到其他標籤頁
+        function syncCode() {
+            const code = editor.getValue();
+            const now = Date.now();
+            
+            currentVersion++;
+            
+            const syncData = {
+                type: 'code_sync',
+                room: currentRoom,
+                code: code,
+                version: currentVersion,
+                userId: userId,
+                userName: userName,
+                timestamp: now
+            };
+            
+            // 保存到localStorage
+            localStorage.setItem(`room_${currentRoom}_code`, JSON.stringify(syncData));
+            
+            // 廣播到其他標籤頁
+            channel.postMessage(syncData);
+            
+            // 更新延遲顯示
+            const delay = now - lastSyncTime;
+            document.getElementById('syncDelay').textContent = `延遲: ~${delay}ms`;
+            lastSyncTime = now;
+            
+            console.log(`📤 代碼同步: 版本 ${currentVersion}, 延遲 ${delay}ms`);
+        }
+        
+        // 載入房間代碼
+        function loadRoomCode() {
+            const savedData = localStorage.getItem(`room_${currentRoom}_code`);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    if (data.code && data.code !== editor.getValue()) {
+                        editor.setValue(data.code);
+                        currentVersion = data.version || 0;
+                        console.log(`📥 載入房間代碼: 版本 ${currentVersion}`);
+                    }
+                } catch (e) {
+                    console.error('載入房間代碼失敗:', e);
+                }
+            }
+        }
+        
+        // 處理來自其他標籤頁的消息
+        channel.onmessage = function(event) {
+            const data = event.data;
+            
+            switch (data.type) {
+                case 'code_sync':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        // 檢查版本衝突
+                        if (data.version > currentVersion) {
+                            editor.setValue(data.code);
+                            currentVersion = data.version;
+                            console.log(`📥 接收代碼同步: 版本 ${currentVersion} from ${data.userName}`);
+                            
+                            // 顯示同步提示
+                            showSyncNotification(data.userName);
+                        }
+                    }
+                    break;
+                    
+                case 'chat_message':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addChatMessage(data.userName, data.message, data.timestamp);
+                    }
+                    break;
+                    
+                case 'user_joined':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addChatMessage('系統', `${data.userName} 加入了房間`, Date.now());
+                        updateUserList();
+                    }
+                    break;
+                    
+                case 'user_left':
+                    if (data.room === currentRoom && data.userId !== userId) {
+                        addChatMessage('系統', `${data.userName} 離開了房間`, Date.now());
+                        updateUserList();
+                    }
+                    break;
+            }
+        };
+        
+        // 顯示同步通知
+        function showSyncNotification(userName) {
+            const indicator = document.querySelector('.status-dot');
+            indicator.style.background = '#ff6b6b';
+            setTimeout(() => {
+                indicator.style.background = '#28a745';
+            }, 200);
+        }
+        
+        // 發送聊天消息
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                const timestamp = Date.now();
+                const chatData = {
+                    type: 'chat_message',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName,
+                    message: message,
+                    timestamp: timestamp
+                };
+                
+                // 添加到本地聊天
+                addChatMessage(userName + ' (您)', message, timestamp);
+                
+                // 廣播到其他標籤頁
+                channel.postMessage(chatData);
+                
+                input.value = '';
+            }
+        }
+        
+        // 添加聊天消息
+        function addChatMessage(user, message, timestamp) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const time = new Date(timestamp).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-user">${user}</span>
+                    <span class="message-time">${time}</span>
+                </div>
+                <div class="message-content">${escapeHtml(message)}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // HTML轉義
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 加入房間
+        function joinRoom() {
+            const newRoom = document.getElementById('room-name').value.trim() || 'demo-room';
+            if (newRoom !== currentRoom) {
+                // 離開當前房間
+                channel.postMessage({
+                    type: 'user_left',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName
+                });
+                
+                currentRoom = newRoom;
+                currentVersion = 0;
+                
+                // 清空聊天記錄
+                document.getElementById('chat-messages').innerHTML = '';
+                
+                // 載入新房間代碼
+                loadRoomCode();
+                
+                // 加入新房間
+                channel.postMessage({
+                    type: 'user_joined',
+                    room: currentRoom,
+                    userId: userId,
+                    userName: userName
+                });
+                
+                addChatMessage('系統', `您已加入房間: ${currentRoom}`, Date.now());
+                console.log(`🏠 加入房間: ${currentRoom}`);
+            }
+        }
+        
+        // 模擬協作編輯
+        function simulateCollaboration() {
+            const collaborationCode = `
+# 🤖 模擬協作編輯 - 自動添加的代碼
+def simulated_collaboration():
+    """這是模擬其他用戶添加的代碼"""
+    print("模擬協作用戶正在編輯...")
+    
+    # 添加一些有趣的Python概念
+    concepts = [
+        "列表推導式",
+        "裝飾器",
+        "生成器", 
+        "上下文管理器",
+        "異步編程"
+    ]
+    
+    for concept in concepts:
+        print(f"正在學習: {concept}")
+    
+    return "協作學習讓程式設計更有趣！"
+
+# 呼叫模擬函數
+print(simulated_collaboration())
+`;
+            
+            // 將代碼添加到編輯器末尾
+            const currentCode = editor.getValue();
+            editor.setValue(currentCode + collaborationCode);
+            
+            // 模擬來自其他用戶的聊天
+            setTimeout(() => {
+                addChatMessage('模擬協作者', '我剛剛添加了一些協作代碼，請查看！', Date.now());
+            }, 500);
+        }
+        
+        // 導出代碼
+        function exportCode() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `python_collaboration_${currentRoom}_${new Date().toISOString().slice(0,16).replace('T', '_')}.py`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addChatMessage('系統', '代碼已導出下載', Date.now());
+        }
+        
+        // 清空代碼
+        function clearCode() {
+            if (confirm('確定要清空所有代碼嗎？')) {
+                editor.setValue('# 新的協作開始...\n\n');
+                addChatMessage('系統', '代碼已清空，重新開始協作', Date.now());
+            }
+        }
+        
+        // 更新同步延遲
+        function updateSyncDelay() {
+            syncDelay = parseInt(document.getElementById('sync-delay').value);
+            console.log(`⚙️ 同步延遲更新為: ${syncDelay}ms`);
+        }
+        
+        // 更新用戶列表（模擬）
+        function updateUserList() {
+            const userList = document.getElementById('user-list');
+            const userCount = document.getElementById('user-count');
+            
+            // 模擬多個用戶
+            const simulatedUsers = [
+                `${userName} (您)`,
+                '張同學',
+                '李同學',
+                '王老師'
+            ];
+            
+            const randomUserCount = Math.floor(Math.random() * simulatedUsers.length) + 1;
+            const currentUsers = simulatedUsers.slice(0, randomUserCount);
+            
+            userList.innerHTML = currentUsers.map(user => 
+                `<div class="user-badge">${user}</div>`
+            ).join('');
+            
+            userCount.textContent = currentUsers.length;
+        }
+        
+        // 聊天輸入框回車發送
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initEditor();
+            updateUserList();
+            
+            // 歡迎消息
+            setTimeout(() => {
+                addChatMessage('系統助手', '🎉 歡迎使用Python協作教學平台！開啟多個標籤頁來體驗真正的協作編輯功能。', Date.now());
+            }, 1000);
+            
+            // 定期更新用戶列表（模擬動態效果）
+            setInterval(updateUserList, 10000);
+        });
+        
+        // 頁面關閉時通知其他標籤頁
+        window.addEventListener('beforeunload', function() {
+            channel.postMessage({
+                type: 'user_left',
+                room: currentRoom,
+                userId: userId,
+                userName: userName
+            });
+        });
+    </script>
+</body>
+</html> 
