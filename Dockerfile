@@ -35,13 +35,19 @@ RUN composer install --no-dev --optimize-autoloader
 # 返回主目錄
 WORKDIR /var/www/html
 
-# 創建supervisor配置文件
-RUN mkdir -p /etc/supervisor/conf.d
+# 創建必要的目錄
+RUN mkdir -p /var/log/supervisor \
+    && mkdir -p /etc/supervisor/conf.d \
+    && mkdir -p /var/run
+
+# 複製supervisor配置文件
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # 設置權限
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+    && chmod -R 755 /var/www/html \
+    && chmod +x /var/www/html/websocket_version/websocket_server.php \
+    && chmod +x /var/www/html/websocket_version/start_websocket.sh
 
 # 暴露端口（Apache 80, WebSocket 8080）
 EXPOSE 80 8080

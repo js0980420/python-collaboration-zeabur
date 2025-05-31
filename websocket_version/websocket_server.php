@@ -1,3 +1,4 @@
+#!/usr/local/bin/php
 <?php
 /**
  * Python協作教學平台 - WebSocket即時服務器 (Ratchet版)
