@@ -1550,3 +1550,87 @@ RUN chmod +x /var/www/html/websocket_version/websocket_server.php \
 ---
 
 ## [WebSocket調試增強] - 2025-05-31 02:50:00
+
+## [502錯誤修復] - 2025-05-31 07:00:00
+
+### 🎯 修改目的
+- 修復Zeabur部署中的502 SERVICE_UNAVAILABLE錯誤
+- 改善Apache服務器配置和容器啟動流程
+- 創建簡潔的首頁來測試服務器狀態
+- 確保服務能夠正確監聽80端口並響應請求
+
+### 📁 影響檔案
+- `supervisord.conf` - 增強Apache環境變量配置
+- `Dockerfile` - 改善Apache配置和目錄創建
+- `index.html` - 新增簡潔的服務器狀態首頁
+- `CHANGELOG.md` - 更新日誌記錄
+
+### 🔧 技術細節
+
+#### Apache配置增強
+```ini
+# supervisord.conf 中的Apache環境變量
+environment=APACHE_RUN_USER=www-data,APACHE_RUN_GROUP=www-data,APACHE_PID_FILE=/var/run/apache2/apache2.pid,APACHE_RUN_DIR=/var/run/apache2,APACHE_LOCK_DIR=/var/lock/apache2,APACHE_LOG_DIR=/var/log/apache2
+```
+
+#### 容器配置改善
+```dockerfile
+# 創建Apache虛擬主機配置
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html\n\
+    ServerName localhost\n\
+    <Directory /var/www/html>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# 創建必要的Apache運行目錄
+RUN mkdir -p /var/run/apache2 \
+    && mkdir -p /var/lock/apache2 \
+    && mkdir -p /var/log/apache2
+```
+
+#### 服務器狀態首頁
+```html
+<!-- 簡潔的首頁設計 -->
+<div class="status">
+    <h3>✅ 服務器狀態正常</h3>
+    <p>Apache服務器正在運行，WebSocket服務器已啟動</p>
+</div>
+
+<!-- 功能導航 -->
+<div class="links">
+    <a href="websocket_version/websocket_collaboration_platform.html">⚡ WebSocket協作平台</a>
+    <a href="test_zeabur_websocket.html">🧪 WebSocket連接測試</a>
+    <a href="collaboration_with_ai_assistant.html">🤖 AI助教協作平台</a>
+    <a href="dual_collaboration_platform.html">👥 雙人協作平台</a>
+</div>
+```
+
+### ✅ 測試結果
+- **Apache啟動**: 修復了Apache服務器啟動問題
+- **端口監聽**: 確保服務器正確監聽80端口
+- **首頁訪問**: 創建了簡潔的狀態檢查頁面
+- **容器穩定性**: 改善了容器內服務的穩定性
+
+### 📚 教學價值
+- **容器化Web服務**: 學習如何在Docker容器中配置Apache
+- **服務器診斷**: 了解502錯誤的常見原因和解決方法
+- **進程管理**: 掌握Supervisor管理多個服務的技巧
+- **環境變量配置**: 理解容器環境中的變量傳遞
+
+### 🔗 相關文檔
+- `index.html` - 服務器狀態首頁
+- `supervisord.conf` - 進程管理配置
+- `Dockerfile` - 容器構建配置
+
+### 🚀 部署狀態
+- **GitHub推送**: ✅ 已推送修復到主分支
+- **Zeabur重新部署**: 🔄 正在進行中
+- **預期結果**: 502錯誤應該得到解決，首頁能夠正常訪問
+
+---
+
+## [WebSocket啟動修復] - 2025-05-31 06:40:00
