@@ -397,36 +397,30 @@ class CollaborationServer implements MessageComponentInterface {
 }
 
 // 啟動WebSocket服務器
-$isZeaburEnv = !empty(getenv('ZEABUR')) || !empty(getenv('DB_HOST'));
+error_log("---------- [WebSocketService] Attempting to start Ratchet server on 0.0.0.0:8080 ----------");
 
-if ($isZeaburEnv) {
-    // Zeabur雲端環境 - 使用內部端口8080
-    $port = 8080;
-    $host = '0.0.0.0';  // 監聽所有接口
-    echo "☁️ 啟動Zeabur雲端WebSocket服務器...\n";
-} else {
-    // XAMPP本地環境
-    $port = 8080;
-    $host = '127.0.0.1';  // 僅本地訪問
-    echo "🏠 啟動XAMPP本地WebSocket服務器...\n";
+try {
+    $isZeaburEnv = !empty(getenv('ZEABUR')) || !empty(getenv('DB_HOST'));
+    $port = 8080; // WebSocket服務器在容器內部始終監聽8080
+    $host = '0.0.0.0'; // 在容器中監聽所有接口
+
+    $server = IoServer::factory(
+        new HttpServer(
+            new WsServer(
+                new CollaborationServer() // 確保 CollaborationServer 類已正確加載
+            )
+        ),
+        $port,
+        $host
+    );
+
+    error_log("---------- [WebSocketService] Ratchet server successfully listening on {$host}:{$port} ----------");
+    $server->run();
+    error_log("---------- [WebSocketService] Ratchet server has stopped. ----------");
+
+} catch (\Throwable $e) { // 使用Throwable捕捉所有類型的錯誤和異常
+    error_log("---------- [WebSocketService] CRITICAL STARTUP ERROR: " . $e->getMessage() . " ----------");
+    error_log("---------- [WebSocketService] Trace: " . $e->getTraceAsString() . " ----------");
+    // 可以在這裡決定是否需要exit(1)來讓Supervisor知道啟動失敗
 }
-
-echo "📍 監聽地址: {$host}:{$port}\n";
-echo "🌐 WebSocket URL: ws://{$host}:{$port}\n";
-echo "⏰ 啟動時間: " . date('Y-m-d H:i:s') . "\n";
-echo "📝 日誌級別: 詳細模式\n";
-echo "🔄 按 Ctrl+C 停止服務器\n";
-echo str_repeat("=", 50) . "\n";
-
-$server = IoServer::factory(
-    new HttpServer(
-        new WsServer(
-            new CollaborationServer()
-        )
-    ),
-    $port,
-    $host
-);
-
-$server->run();
 ?> 

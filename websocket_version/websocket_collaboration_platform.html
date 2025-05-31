@@ -408,9 +408,14 @@
                 
                 // 檢查是否在Zeabur雲端環境
                 if (window.location.hostname.includes('zeabur.app')) {
-                    // Zeabur環境：使用wss安全連接，不指定端口，Zeabur會自動路由
-                    serverIP = window.location.hostname;
-                    wsUrl = `wss://${serverIP}`;
+                    // Zeabur環境：使用Zeabur提供的特定WebSocket域名和端口
+                    // 重要：這裡的域名和端口需要與Zeabur網絡配置中顯示的一致
+                    // 根據截圖 image_8c0d74.png，應該是 hnd1.clusters.zeabur.com:31193
+                    serverIP = 'hnd1.clusters.zeabur.com'; // 或者完整的 hnd1.clusters.zeabur.com
+                    const zeaburWsPort = 31193; // Zeabur分配的WebSocket外部端口
+                    wsUrl = `wss://${serverIP}:${zeaburWsPort}`;
+                    // 同時更新 Server IP 輸入框的顯示，儘管它在Zeabur環境中可能不直接被用戶修改後使用
+                    document.getElementById('serverIP').value = `${serverIP}:${zeaburWsPort}`;
                 } else {
                     // 本地環境：檢查用戶設置
                     const customServerIP = document.getElementById('serverIP')?.value?.trim();

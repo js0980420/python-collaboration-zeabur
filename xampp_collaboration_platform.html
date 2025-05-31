@@ -538,7 +538,7 @@ if __name__ == "__main__":
                 case 'room_users':
                     updateActiveUsers(data.data);
                     break;
-
+                    
                 case 'chat_message':
                     if (data.userId !== currentUserId) {
                         addChatMessage(data.userName, data.data.message, false);
