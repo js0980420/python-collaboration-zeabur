@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo 🔧 修復Zeabur部署端口問題
+echo 🎨 優化WebSocket協作平台UI布局
 echo ================================
 
 echo 📋 檢查當前配置...
@@ -12,32 +12,51 @@ if not exist "zeabur.json" (
 
 echo ✅ zeabur.json 配置已更新
 echo ✅ WebSocket服務器已修復
-echo ✅ 前端WebSocket連接URL已修正 (移除Zeabur環境下的:8080端口)
+echo ✅ 前端WebSocket連接URL已修正
+echo ✅ UI布局已優化 - 代碼編輯區更大，AI助教和聊天都在右側
 
 echo.
 echo 📤 準備推送到GitHub...
 git add .
-git commit -m "修復Zeabur WebSocket端口和前端連接URL
+git commit -m "優化WebSocket協作平台UI布局和用戶體驗
 
-- zeabur.json端口配置保持公開80端口
-- WebSocket服務器PHP腳本在Zeabur環境監聽0.0.0.0:8080
-- 前端HTML在Zeabur環境下連接 wss://<domain> (無端口號)
-- 確保端口正確映射和代理"
+🎨 UI布局優化:
+- 代碼編輯區占比增加到2.5倍空間
+- AI助教和聊天面板都移到右側
+- 右側面板寬度優化(400-450px)
+- 增加第4個AI助教功能按鈕(協作指導)
+
+🔧 樣式改進:
+- 美化滾動條樣式
+- 優化按鈕和面板間距
+- 改進響應式設計
+- 增強視覺層次感
+
+🌐 WebSocket連接修復:
+- Zeabur環境使用 wss://hnd1.clusters.zeabur.com:31193
+- 本地環境使用 ws://localhost:8080
+- 自動環境檢測和URL配置
+
+📱 移動端適配:
+- 小屏幕下垂直布局
+- 面板高度自適應
+- 觸控友好的按鈕尺寸"
 
 echo.
 echo 🚀 推送到GitHub...
 git push origin main
 
 echo.
-echo ✅ 修復完成！
+echo ✅ UI優化完成！
 echo.
-echo 📋 接下來的步驟：
-echo 1. 前往Zeabur控制台
-echo 2. 觸發新的部署 (最新的commit應該會自動觸發)
-echo 3. 檢查部署日誌，確認Apache和WebSocket服務器正常啟動
-echo 4. 測試應用程序，WebSocket連接應該正常
+echo 📋 更新內容：
+echo 1. 代碼編輯區空間增大 (flex: 2.5)
+echo 2. AI助教和聊天都在右側 (400-450px寬度)
+echo 3. 新增協作指導AI功能按鈕
+echo 4. 美化滾動條和視覺效果
+echo 5. 改進移動端響應式設計
 echo.
-echo 🌐 預期的Zeabur WebSocket URL: wss://your-domain.zeabur.app (無端口號)
-echo 🏠 本地測試WebSocket URL: ws://localhost:8080 或 ws://192.168.x.x:8080
+echo 🌐 Zeabur URL: https://python-learn.zeabur.app
+echo 🔌 WebSocket: wss://hnd1.clusters.zeabur.com:31193
 echo.
 pause 
