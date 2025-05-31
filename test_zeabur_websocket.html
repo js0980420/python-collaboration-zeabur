@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeabur WebSocket 連接測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Zeabur WebSocket 連接測試</h1>
+        
+        <div>
+            <label>WebSocket URL:</label><br>
+            <input type="text" id="wsUrl" value="wss://python-collaboration-zeabur.zeabur.app" placeholder="輸入WebSocket URL">
+            <button onclick="connect()">連接</button>
+            <button onclick="disconnect()" id="disconnectBtn" disabled>斷開</button>
+        </div>
+        
+        <div id="status" class="status connecting">準備連接...</div>
+        
+        <div>
+            <h3>測試功能:</h3>
+            <button onclick="sendJoinRoom()" id="joinBtn" disabled>加入房間</button>
+            <button onclick="sendPing()" id="pingBtn" disabled>發送Ping</button>
+            <button onclick="sendCodeChange()" id="codeBtn" disabled>發送代碼變更</button>
+        </div>
+        
+        <div>
+            <h3>連接日誌:</h3>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let connectionStartTime = null;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function updateButtons(connected) {
+            document.getElementById('disconnectBtn').disabled = !connected;
+            document.getElementById('joinBtn').disabled = !connected;
+            document.getElementById('pingBtn').disabled = !connected;
+            document.getElementById('codeBtn').disabled = !connected;
+        }
+        
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            if (!url) {
+                alert('請輸入WebSocket URL');
+                return;
+            }
+            
+            log(`🔄 嘗試連接到: ${url}`);
+            updateStatus('正在連接...', 'connecting');
+            connectionStartTime = Date.now();
+            
+            try {
+                ws = new WebSocket(url);
+                
+                ws.onopen = function(event) {
+                    const connectionTime = Date.now() - connectionStartTime;
+                    log(`✅ WebSocket連接成功! 耗時: ${connectionTime}ms`);
+                    updateStatus('已連接', 'connected');
+                    updateButtons(true);
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log(`📨 收到消息: ${JSON.stringify(data, null, 2)}`);
+                    } catch (e) {
+                        log(`📨 收到原始消息: ${event.data}`);
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    log(`❌ WebSocket連接關閉. 代碼: ${event.code}, 原因: ${event.reason || '未知'}`);
+                    updateStatus(`連接已關閉 (${event.code})`, 'error');
+                    updateButtons(false);
+                    
+                    // 常見錯誤代碼說明
+                    if (event.code === 1006) {
+                        log(`🔍 錯誤1006通常表示: 服務器未響應或網絡問題`);
+                    } else if (event.code === 1002) {
+                        log(`🔍 錯誤1002通常表示: 協議錯誤`);
+                    } else if (event.code === 1011) {
+                        log(`🔍 錯誤1011通常表示: 服務器內部錯誤`);
+                    }
+                };
+                
+                ws.onerror = function(error) {
+                    log(`❌ WebSocket錯誤: ${error.message || '連接失敗'}`);
+                    updateStatus('連接錯誤', 'error');
+                    updateButtons(false);
+                };
+                
+            } catch (error) {
+                log(`❌ 創建WebSocket時發生錯誤: ${error.message}`);
+                updateStatus('創建連接失敗', 'error');
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                log(`🔌 手動斷開連接`);
+            }
+        }
+        
+        function sendJoinRoom() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log(`❌ WebSocket未連接`);
+                return;
+            }
+            
+            const message = {
+                action: 'join_room',
+                room: 'test_room',
+                user_id: 'test_user_' + Math.random().toString(36).substr(2, 9),
+                user_name: '測試用戶'
+            };
+            
+            ws.send(JSON.stringify(message));
+            log(`📤 發送加入房間請求: ${JSON.stringify(message)}`);
+        }
+        
+        function sendPing() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log(`❌ WebSocket未連接`);
+                return;
+            }
+            
+            const message = {
+                action: 'ping',
+                timestamp: Date.now()
+            };
+            
+            ws.send(JSON.stringify(message));
+            log(`📤 發送Ping: ${JSON.stringify(message)}`);
+        }
+        
+        function sendCodeChange() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log(`❌ WebSocket未連接`);
+                return;
+            }
+            
+            const message = {
+                action: 'code_change',
+                room: 'test_room',
+                user_id: 'test_user',
+                user_name: '測試用戶',
+                data: {
+                    code: 'print("Hello from Zeabur WebSocket!")',
+                    version: 1
+                }
+            };
+            
+            ws.send(JSON.stringify(message));
+            log(`📤 發送代碼變更: ${JSON.stringify(message)}`);
+        }
+        
+        // 頁面載入時的初始化
+        window.onload = function() {
+            log(`🌐 頁面載入完成，準備測試WebSocket連接`);
+            log(`🎯 目標服務器: Zeabur部署的Python協作教學平台`);
+            log(`⚡ 預期功能: 實時協作編程 (<0.5秒延遲)`);
+        };
+    </script>
+</body>
+</html> 
