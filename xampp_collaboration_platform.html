@@ -22,7 +22,7 @@
             height: 100vh;
             overflow: hidden;
         }
-
+        
         .header {
             background: rgba(0, 0, 0, 0.3);
             padding: 10px 20px;
@@ -80,7 +80,7 @@
             justify-content: space-between;
             align-items: center;
         }
-
+        
         .CodeMirror {
             height: 100% !important;
             font-size: 14px;
@@ -100,7 +100,7 @@
             padding: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
-
+        
         .ai-response {
             flex: 1;
             padding: 15px;
@@ -194,7 +194,7 @@
             font-size: 0.8em;
             color: rgba(255, 255, 255, 0.8);
         }
-
+        
         .stat-item {
             display: flex;
             align-items: center;
@@ -218,7 +218,7 @@
 </head>
 <body>
     <!-- 頂部控制欄 -->
-    <div class="header">
+        <div class="header">
         <div class="logo">🏠 XAMPP本地版 - Python協作教學平台</div>
         <div class="connection-controls">
             <input type="text" id="roomInput" class="form-control form-control-sm form-control-custom" 
@@ -231,8 +231,8 @@
                 <span id="statusText">未連接</span>
             </div>
         </div>
-    </div>
-
+        </div>
+        
     <!-- 主要內容區域 -->
     <div class="main-container">
         <!-- 代碼編輯區域 -->
@@ -241,23 +241,23 @@
                 <div>
                     <strong>📝 Python代碼編輯器</strong>
                     <span class="user-list" id="activeUsers"></span>
-                </div>
+            </div>
                 <div class="performance-stats">
                     <div class="stat-item">
                         <div class="sync-indicator"></div>
                         <span>XAMPP本地同步</span>
-                    </div>
+            </div>
                     <div class="stat-item">
                         <span>延遲: <span id="latencyDisplay">--</span>ms</span>
-                    </div>
+            </div>
                     <div class="stat-item">
                         <span>版本: <span id="versionDisplay">1</span></span>
-                    </div>
+        </div>
                 </div>
             </div>
             <textarea id="codeEditor"></textarea>
         </div>
-
+        
         <!-- AI助教面板 -->
         <div class="ai-panel">
             <div class="section-header">
@@ -269,15 +269,15 @@
                 • 使用本地MySQL數據庫<br>
                 • WebSocket服務器: ws://127.0.0.1:8080<br>
                 • 支援離線AI助教功能
-            </div>
-
+                </div>
+                
             <div class="ai-controls">
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <button class="btn btn-custom btn-sm w-100" onclick="callAI('explain')">
                             📖 解釋程式碼
                         </button>
-                    </div>
+                        </div>
                     <div class="col-6">
                         <button class="btn btn-custom btn-sm w-100" onclick="callAI('bugs')">
                             🐛 檢查錯誤
@@ -287,23 +287,23 @@
                         <button class="btn btn-custom btn-sm w-100" onclick="callAI('improve')">
                             ⚡ 改進建議
                         </button>
-                    </div>
+                </div>
                     <div class="col-6">
                         <button class="btn btn-custom btn-sm w-100" onclick="callAI('help')">
                             🎓 協作指導
                         </button>
-                    </div>
                 </div>
-                
+            </div>
+            
                 <div class="input-group input-group-sm">
                     <input type="text" id="aiQuestion" class="form-control form-control-custom" 
                            placeholder="輸入Python問題...">
                     <button class="btn btn-custom" onclick="callAI('general')">
                         🚀 提問
                     </button>
+                    </div>
                 </div>
-            </div>
-
+                
             <div class="ai-response" id="aiResponse">
                 <div style="color: rgba(255,255,255,0.7); text-align: center; padding: 20px;">
                     🤖 AI助教準備就緒<br>
@@ -311,14 +311,14 @@
                 </div>
             </div>
         </div>
-    </div>
-
+            </div>
+            
     <!-- 聊天區域 -->
     <div class="chat-section">
         <div class="section-header">
             <strong>💬 協作聊天</strong>
             <small>與其他學習者即時交流</small>
-        </div>
+            </div>
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-input-area">
             <input type="text" id="chatInput" class="form-control form-control-sm form-control-custom" 
@@ -476,7 +476,7 @@ if __name__ == "__main__":
                     // 加入房間
                     ws.send(JSON.stringify({
                         type: 'join_room',
-                        room: currentRoom,
+                room: currentRoom,
                         userId: currentUserId,
                         userName: currentUserName
                     }));
@@ -534,7 +534,7 @@ if __name__ == "__main__":
                         latencyStart = 0;
                     }
                     break;
-
+                    
                 case 'room_users':
                     updateActiveUsers(data.data);
                     break;
@@ -544,7 +544,7 @@ if __name__ == "__main__":
                         addChatMessage(data.userName, data.data.message, false);
                     }
                     break;
-
+                    
                 case 'user_joined':
                     if (data.userId !== currentUserId) {
                         addChatMessage('系統', `${data.userName} 加入了房間`, true);
@@ -569,7 +569,7 @@ if __name__ == "__main__":
                 latencyStart = Date.now();
                 ws.send(JSON.stringify({
                     type: 'code_change',
-                    room: currentRoom,
+                        room: currentRoom,
                     userId: currentUserId,
                     userName: currentUserName,
                     data: {
@@ -578,7 +578,7 @@ if __name__ == "__main__":
                 }));
             }
         }
-
+        
         // 發送聊天消息
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
@@ -587,8 +587,8 @@ if __name__ == "__main__":
             if (!message || !isConnected) return;
 
             ws.send(JSON.stringify({
-                type: 'chat_message',
-                room: currentRoom,
+                            type: 'chat_message',
+                            room: currentRoom,
                 userId: currentUserId,
                 userName: currentUserName,
                 data: {
@@ -642,7 +642,7 @@ if __name__ == "__main__":
                 text.textContent = `已連接 (${currentRoom})`;
                 connectBtn.textContent = '斷開';
                 connectBtn.onclick = disconnectWebSocket;
-            } else {
+                    } else {
                 indicator.classList.remove('connected');
                 text.textContent = '未連接';
                 connectBtn.textContent = '連接';
