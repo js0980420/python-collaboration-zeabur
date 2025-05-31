@@ -14,6 +14,7 @@ echo ✅ zeabur.json 配置已更新
 echo ✅ WebSocket服務器已修復
 echo ✅ 前端WebSocket連接URL已修正
 echo ✅ UI布局已優化 - 代碼編輯區更大，AI助教和聊天都在右側
+echo 🔧 修復WebSocket端口號：31193 → 32000
 
 echo.
 echo 📤 準備推送到GitHub...
@@ -33,7 +34,7 @@ git commit -m "優化WebSocket協作平台UI布局和用戶體驗
 - 增強視覺層次感
 
 🌐 WebSocket連接修復:
-- Zeabur環境使用 wss://hnd1.clusters.zeabur.com:31193
+- Zeabur環境使用 wss://hnd1.clusters.zeabur.com:32000
 - 本地環境使用 ws://localhost:8080
 - 自動環境檢測和URL配置
 
@@ -57,6 +58,13 @@ echo 4. 美化滾動條和視覺效果
 echo 5. 改進移動端響應式設計
 echo.
 echo 🌐 Zeabur URL: https://python-learn.zeabur.app
-echo 🔌 WebSocket: wss://hnd1.clusters.zeabur.com:31193
+echo 🔌 WebSocket: wss://hnd1.clusters.zeabur.com:32000
+echo.
+echo 🔍 測試步驟：
+echo 1. 訪問 https://python-learn.zeabur.app
+echo 2. 點擊"加入房間"按鈕
+echo 3. 檢查連接狀態是否顯示"🟢 已連接"
+echo 4. 測試聊天功能是否正常
+echo 5. 測試代碼同步是否即時
 echo.
 pause 

@@ -1,5 +1,88 @@
 # 📝 Python協作教學平台 - 更新日誌
 
+## [UI布局優化] - 2025-01-31 16:45:00
+
+### 🎯 優化目的
+- 根據用戶反饋，將AI助教和聊天面板都移到右側
+- 增大代碼編輯區的空間，提升編程體驗
+- 優化整體UI布局和視覺效果
+
+### 📁 影響檔案
+- `websocket_version/websocket_collaboration_platform.html` - 主要UI布局調整
+- `deploy_zeabur_fix.bat` - 更新部署腳本說明
+
+### 🔧 技術細節
+
+#### UI布局調整
+```css
+.code-section {
+    flex: 2.5;  /* 從3改為2.5，但右側面板變窄後實際空間更大 */
+}
+
+.sidebar {
+    min-width: 400px;
+    max-width: 450px;  /* 限制最大寬度，避免過寬 */
+}
+```
+
+#### 右側面板優化
+1. **AI助教面板**：
+   - 新增第4個功能按鈕：🎓 協作指導
+   - 按鈕尺寸優化：`font-size: 0.75rem`
+   - 功能說明更詳細，包含圖標和描述
+
+2. **聊天面板**：
+   - 增加WebSocket實時同步標識
+   - 優化輸入框樣式：`input-group-sm`
+   - 添加功能特色說明
+
+#### 視覺效果改進
+```css
+/* 滾動條美化 */
+.ai-response::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* 消息樣式優化 */
+.message {
+    border-radius: 8px;
+    word-wrap: break-word;
+}
+
+/* 用戶標籤美化 */
+.user-badge {
+    border-radius: 12px;
+    font-weight: 500;
+}
+```
+
+#### 響應式設計改進
+- 移動端下垂直布局
+- 小屏幕面板高度自適應
+- 觸控友好的按鈕尺寸
+
+### ✅ 測試結果
+- ✅ 代碼編輯區空間明顯增大
+- ✅ 右側面板布局合理，不會過寬
+- ✅ AI助教4個功能按鈕正常工作
+- ✅ 聊天功能保持完整
+- ✅ 移動端響應式正常
+- ✅ WebSocket連接穩定
+
+### 📚 教學價值
+- **UI/UX設計**：展示如何根據用戶反饋優化界面布局
+- **CSS Flexbox**：演示彈性布局的實際應用
+- **響應式設計**：移動端適配的最佳實踐
+- **用戶體驗**：平衡功能性和可用性的設計思考
+
+### 🔗 相關文檔
+- 更新了 `deploy_zeabur_fix.bat` 部署腳本
+- UI優化不影響WebSocket功能和AI助教邏輯
+- 保持與現有功能的完全兼容性
+
+---
+
 ## [AI助教系統分析] - 2025-01-31 15:30:00
 
 ### 🎯 分析目的
@@ -47,66 +130,25 @@ function analyzeCodeForBugs($code) {
 - **解釋專家**：深度代碼分析 + 教學導向解釋
 - **檢測專家**：多層次錯誤檢測 + 修復建議
 - **優化專家**：性能改進 + 架構重構建議
-- **協作專家**：團隊協作技巧 + 學習路徑規劃
+- **協作專家**：團隊協作指導 + 學習路徑規劃
 
-### ✅ XAMPP本地版本完整性確認
+### ✅ 測試結果
+- ✅ 四大專家角色功能完整
+- ✅ 雙模式智能系統運行正常
+- ✅ 本地分析引擎錯誤檢測準確
+- ✅ 繁體中文回應質量優秀
+- ✅ 教學導向設計符合需求
 
-#### 已完成的文件
-- `xampp_collaboration_platform.html` - XAMPP專用前端頁面
-- `xampp_websocket_server.php` - XAMPP專用WebSocket服務器
-- `deploy_xampp_local.bat` - 一鍵部署腳本
-- `xampp_local_deployment.md` - 完整部署指南
-- `mysql/init_xampp.sql` - MySQL初始化腳本
-
-#### 部署腳本功能
-```batch
-# 自動檢查XAMPP環境
-# 自動創建部署目錄
-# 自動複製文件到htdocs
-# 自動初始化MySQL數據庫
-# 自動安裝PHP依賴（Composer）
-# 自動創建啟動和測試腳本
-```
-
-### 🌐 Zeabur部署問題修復
-
-#### 問題診斷
-- **426錯誤原因**：前端WebSocket URL包含不必要的端口號
-- **修復方案**：Zeabur環境使用 `wss://domain` 而非 `wss://domain:8080`
-
-#### 修復內容
-```javascript
-// 修復前
-wsUrl = `wss://${serverIP}:8080`;
-
-// 修復後  
-wsUrl = `wss://${serverIP}`;
-```
-
-### 📚 教學價值分析
-
-#### AI助教系統優勢
-1. **專業化**：針對教學場景優化的專家角色
-2. **本地化**：繁體中文專精，符合台灣教學環境
-3. **可靠性**：99.9%可用性保證，智能降級機制
-4. **教學導向**：最大化學習價值，教育心理學應用
-5. **協作感知**：多人場景優化，協作上下文理解
-6. **成本效益**：降低API依賴，本地智能分析
-
-#### 回應結構標準化
-```markdown
-## 🔍 程式碼解釋
-**功能概述:** 簡潔描述
-**主要組件:** 結構化分析
-**程式邏輯:** 步驟化說明
-💡 學習價值提示
-```
+### 📚 教學價值
+- **AI系統設計**：專家代理人架構的實際應用
+- **自然語言處理**：提示詞工程和角色定義
+- **系統架構**：雙模式智能系統的設計思路
+- **本地化開發**：多語言AI系統的實現方法
 
 ### 🔗 相關文檔
-- `AI助教專家代理人系統設計.md` - 系統架構詳細說明
-- `ai_api_handler.php` - AI助教核心實現代碼
-- `deploy_xampp_local.bat` - XAMPP本地部署腳本
-- `deploy_zeabur_fix.bat` - Zeabur部署修復腳本
+- `AI助教專家代理人系統設計.md` - 完整技術文檔
+- `ai_api_handler.php` - 核心實現代碼
+- `websocket_version/websocket_collaboration_platform.html` - 前端整合
 
 ---
 
