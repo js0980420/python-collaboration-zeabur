@@ -60,12 +60,51 @@ class PythonCollaborationHandler implements MessageComponentInterface {
             $username = $_ENV['DB_USER'] ?? getenv('MYSQL_USERNAME') ?? 'root';
             $password = $_ENV['DB_PASSWORD'] ?? getenv('MYSQL_PASSWORD') ?? '';
             
+            $this->log("🔍 數據庫連接參數檢查:");
+            $this->log("   主機: {$host}");
+            $this->log("   端口: {$port}");
+            $this->log("   數據庫: {$dbname}");
+            $this->log("   用戶名: {$username}");
+            $this->log("   密碼: " . (empty($password) ? '(空)' : '***'));
+            
             $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+            $this->log("🔗 DSN: {$dsn}");
+            
+            $this->log("🔄 正在嘗試連接數據庫...");
             $this->pdo = new PDO($dsn, $username, $password);
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->log("✅ 數據庫連接成功 ({$host}:{$port}/{$dbname})");
+            
+            // 測試連接
+            $stmt = $this->pdo->query("SELECT 1 as test");
+            $result = $stmt->fetch();
+            
+            if ($result && $result['test'] == 1) {
+                $this->log("✅ 數據庫連接成功並測試通過 ({$host}:{$port}/{$dbname})");
+                
+                // 檢查必要的表是否存在
+                $tables = ['rooms', 'room_code_snapshots', 'room_participants'];
+                foreach ($tables as $table) {
+                    $stmt = $this->pdo->prepare("SHOW TABLES LIKE ?");
+                    $stmt->execute([$table]);
+                    if ($stmt->fetch()) {
+                        $this->log("📋 表 {$table}: ✅");
+                    } else {
+                        $this->log("📋 表 {$table}: ❌ (不存在)");
+                    }
+                }
+            } else {
+                $this->log("❌ 數據庫連接測試失敗");
+            }
+            
         } catch (PDOException $e) {
             $this->log("❌ 數據庫連接失敗: " . $e->getMessage());
+            $this->log("🔍 錯誤代碼: " . $e->getCode());
+            $this->log("🔍 可能的原因:");
+            $this->log("   1. MySQL服務未啟動");
+            $this->log("   2. 數據庫不存在");
+            $this->log("   3. 用戶名或密碼錯誤");
+            $this->log("   4. 網絡連接問題");
+            $this->log("   5. 防火牆阻擋");
         }
     }
     
@@ -585,22 +624,95 @@ class PythonCollaborationHandler implements MessageComponentInterface {
         $logFile = __DIR__ . '/websocket_debug.log';
         error_log("[$timestamp] WS_SERVER: $message\n", 3, $logFile);
         echo "[$timestamp] $message\n";
+        // 強制刷新輸出緩衝區
+        flush();
     }
 }
 
-// 啟動WebSocket服務器
-$port = 8080;
+// === WebSocket服務器啟動配置 ===
+echo "\n🔧 WebSocket服務器啟動配置檢查\n";
+echo "===============================================\n";
+
+// 檢查PHP版本
+echo "📋 PHP版本: " . phpversion() . "\n";
+
+// 檢查必要的擴展
+$required_extensions = ['pdo', 'pdo_mysql', 'json', 'sockets'];
+foreach ($required_extensions as $ext) {
+    $status = extension_loaded($ext) ? "✅" : "❌";
+    echo "📦 擴展 {$ext}: {$status}\n";
+}
+
+// 檢查Composer自動加載
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    echo "📚 Composer自動加載: ✅\n";
+} else {
+    echo "📚 Composer自動加載: ❌ (請運行 composer install)\n";
+    exit(1);
+}
+
+// 檢查環境變量
+echo "\n🌍 環境變量檢查:\n";
+$env_vars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'MYSQL_HOST', 'MYSQL_PORT', 'MYSQL_DATABASE', 'MYSQL_USERNAME', 'MYSQL_PASSWORD'];
+foreach ($env_vars as $var) {
+    $value = $_ENV[$var] ?? getenv($var);
+    if ($value) {
+        // 隱藏密碼
+        $display_value = (strpos($var, 'PASSWORD') !== false) ? '***' : $value;
+        echo "🔑 {$var}: {$display_value}\n";
+    } else {
+        echo "🔑 {$var}: (未設置)\n";
+    }
+}
+
+// 服務器配置
+$port = $_ENV['PORT'] ?? getenv('PORT') ?? 8080;
 $host = '0.0.0.0';
 
-$handler = new PythonCollaborationHandler();
+echo "\n🚀 服務器配置:\n";
+echo "📡 監聽主機: {$host}\n";
+echo "🔌 監聽端口: {$port}\n";
+echo "🌐 完整地址: ws://{$host}:{$port}\n";
 
-$server = IoServer::factory(
-    new HttpServer(
-        new WsServer($handler)
-    ),
-    $port,
-    $host
-);
+// 檢查端口是否可用
+echo "\n🔍 端口可用性檢查:\n";
+$socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+if ($socket) {
+    $bind_result = @socket_bind($socket, $host, $port);
+    if ($bind_result) {
+        echo "✅ 端口 {$port} 可用\n";
+        socket_close($socket);
+    } else {
+        echo "❌ 端口 {$port} 被占用或無法綁定\n";
+        $error = socket_strerror(socket_last_error());
+        echo "🔍 錯誤詳情: {$error}\n";
+    }
+} else {
+    echo "❌ 無法創建socket\n";
+}
+
+echo "\n===============================================\n";
+
+// 創建處理器實例
+echo "🏗️ 創建WebSocket處理器...\n";
+$handler = new PythonCollaborationHandler();
+echo "✅ WebSocket處理器創建成功\n";
+
+// 創建服務器實例
+echo "🔧 創建Ratchet服務器實例...\n";
+try {
+    $server = IoServer::factory(
+        new HttpServer(
+            new WsServer($handler)
+        ),
+        $port,
+        $host
+    );
+    echo "✅ Ratchet服務器實例創建成功\n";
+} catch (Exception $e) {
+    echo "❌ 創建服務器實例失敗: " . $e->getMessage() . "\n";
+    exit(1);
+}
 
 echo "\n";
 echo "🚀 Python協作教學平台 - WebSocket服務器啟動\n";
@@ -609,7 +721,21 @@ echo "📡 監聽地址: ws://{$host}:{$port}\n";
 echo "⚡ 目標延遲: <0.5秒\n";
 echo "🛠️ 技術棧: Ratchet + ReactPHP\n";
 echo "💾 數據庫: MySQL (python_collaboration)\n";
+echo "🐳 容器環境: " . (getenv('ZEABUR') ? 'Zeabur' : 'Local') . "\n";
+echo "⏰ 啟動時間: " . date('Y-m-d H:i:s') . "\n";
 echo "===============================================\n";
+echo "🎯 服務器正在啟動，準備接受連接...\n";
 echo "按 Ctrl+C 停止服務器\n\n";
 
-$server->run(); 
+// 強制刷新輸出
+flush();
+
+// 啟動服務器
+echo "🔥 開始監聽端口 {$port}...\n";
+try {
+    $server->run();
+} catch (Exception $e) {
+    echo "❌ 服務器運行錯誤: " . $e->getMessage() . "\n";
+    echo "🔍 錯誤追蹤: " . $e->getTraceAsString() . "\n";
+    exit(1);
+} 
