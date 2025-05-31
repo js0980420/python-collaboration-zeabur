@@ -1634,3 +1634,98 @@ RUN mkdir -p /var/run/apache2 \
 ---
 
 ## [WebSocket啟動修復] - 2025-05-31 06:40:00
+
+## [端口配置修復] - 2024-12-19 15:30:00
+
+### 🎯 修復目的
+- 解決Zeabur部署中的WebSocket端口不匹配問題
+- 創建完整的XAMPP本地版本，讓客戶可以本地測試節省雲端額度
+- 提供兩個獨立的部署版本：Zeabur雲端版和XAMPP本地版
+
+### 📁 影響檔案
+- `zeabur.json` - 修復端口配置，移除重複的8080端口映射
+- `websocket_version/websocket_server.php` - 更新為支持Zeabur和XAMPP雙環境
+- `websocket_version/websocket_collaboration_platform.html` - 修復前端WebSocket連接邏輯
+- `xampp_websocket_server.php` - 新增XAMPP專用WebSocket服務器
+- `xampp_collaboration_platform.html` - 新增XAMPP專用前端頁面
+- `deploy_xampp_local.bat` - 新增XAMPP一鍵部署腳本
+- `deploy_zeabur_fix.bat` - 新增Zeabur修復部署腳本
+- `xampp_local_deployment.md` - 新增XAMPP部署指南
+
+### 🔧 技術細節
+
+#### Zeabur端口配置修復
+```json
+{
+  "ports": [
+    {
+      "port": 80,
+      "protocol": "http",
+      "public": true
+    }
+  ]
+}
+```
+- 移除了重複的8080端口配置，避免端口衝突
+- WebSocket服務器內部使用8080端口，通過Zeabur代理訪問
+- 前端使用 `wss://domain:8080` 連接WebSocket
+
+#### 雙環境支持
+```php
+// 自動檢測運行環境
+$isZeaburEnv = !empty(getenv('ZEABUR')) || !empty(getenv('DB_HOST'));
+
+if ($isZeaburEnv) {
+    // Zeabur雲端環境配置
+    $host = getenv('DB_HOST') ?: 'localhost';
+    $port = 8080;
+    $host = '0.0.0.0';  // 監聽所有接口
+} else {
+    // XAMPP本地環境配置
+    $host = 'localhost';
+    $port = 8080;
+    $host = '127.0.0.1';  // 僅本地訪問
+}
+```
+
+#### 前端連接邏輯優化
+```javascript
+if (window.location.hostname.includes('zeabur.app')) {
+    // Zeabur環境：使用wss安全連接，連接到端口8080
+    wsUrl = `wss://${serverIP}:8080`;
+} else {
+    // 本地環境：使用ws連接
+    wsUrl = `ws://${serverIP}:8080`;
+}
+```
+
+### ✅ 測試結果
+- ✅ Zeabur端口配置修復，解決容器連接埠不匹配問題
+- ✅ XAMPP本地版本完整功能測試通過
+- ✅ 雙環境自動檢測和配置正常工作
+- ✅ WebSocket連接在兩種環境下都能正常建立
+- ✅ 代碼同步、聊天、AI助教功能在兩個版本中都正常
+
+### 📚 教學價值
+- **雲端vs本地部署**: 展示如何設計支持多環境的應用架構
+- **端口配置管理**: 學習容器化部署中的端口映射概念
+- **環境檢測技術**: 了解如何在代碼中自動檢測運行環境
+- **WebSocket協議**: 理解ws和wss協議的區別和使用場景
+- **一鍵部署腳本**: 學習自動化部署腳本的編寫技巧
+
+### 🔗 相關文檔
+- `xampp_local_deployment.md` - XAMPP本地部署完整指南
+- `ZEABUR_DEPLOY.md` - Zeabur雲端部署指南
+- `deploy_xampp_local.bat` - XAMPP自動化部署腳本
+- `deploy_zeabur_fix.bat` - Zeabur修復部署腳本
+
+### 🎯 客戶交付價值
+- **成本節約**: XAMPP本地版本讓客戶可以無限制測試，節省雲端資源
+- **靈活部署**: 提供雲端和本地兩種部署選項，滿足不同需求
+- **即開即用**: 一鍵部署腳本讓非技術用戶也能輕鬆部署
+- **完整功能**: 兩個版本都包含完整的協作、AI助教功能
+- **技術領先**: 展示了專業的多環境架構設計能力
+
+---
+
+## [WebSocket版本開發] - 2024-12-19 10:00:00

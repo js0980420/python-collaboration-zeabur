@@ -408,9 +408,9 @@
                 
                 // 檢查是否在Zeabur雲端環境
                 if (window.location.hostname.includes('zeabur.app')) {
-                    // Zeabur環境：使用wss安全連接，不指定端口，讓Zeabur處理
+                    // Zeabur環境：使用wss安全連接，連接到端口8080
                     serverIP = window.location.hostname;
-                    wsUrl = `wss://${serverIP}`;
+                    wsUrl = `wss://${serverIP}:8080`;
                 } else {
                     // 本地環境：檢查用戶設置
                     const customServerIP = document.getElementById('serverIP')?.value?.trim();

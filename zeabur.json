@@ -10,11 +10,6 @@
       "port": 80,
       "protocol": "http",
       "public": true
-    },
-    {
-      "port": 8080,
-      "protocol": "tcp",
-      "public": true
     }
   ],
   "environment": {
@@ -24,7 +19,8 @@
     "DB_USER": "${MYSQL_USERNAME}",
     "DB_PASSWORD": "${MYSQL_PASSWORD}",
     "APACHE_DOCUMENT_ROOT": "/var/www/html",
-    "WEBSOCKET_PORT": "8080"
+    "WEBSOCKET_PORT": "8080",
+    "PORT": "80"
   },
   "services": [
     {
@@ -49,5 +45,9 @@
       "domain": "*.zeabur.app",
       "port": 80
     }
-  ]
+  ],
+  "healthcheck": {
+    "path": "/",
+    "port": 80
+  }
 } 

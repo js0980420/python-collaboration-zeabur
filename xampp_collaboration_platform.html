@@ -3,486 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Python協作教學平台 - XAMPP版本</title>
+    <title>🏠 XAMPP本地版 - Python協作教學平台</title>
+    
+    <!-- CodeMirror CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
         body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 0;
+            height: 100vh;
             overflow: hidden;
         }
-        
+
         .header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            padding: 20px 30px;
-            color: white;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-        
-        .subtitle {
-            margin: 5px 0 0 0;
-            opacity: 0.9;
-            font-size: 16px;
-        }
-        
-        .status-bar {
-            background: #f8f9fa;
-            padding: 10px 30px;
-            border-bottom: 1px solid #e0e0e0;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
+            height: 60px;
         }
-        
-        .status-item {
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .connection-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            margin-right: 5px;
+        }
+
+        .status-indicator.connected {
+            background: #28a745;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .code-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 14px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .ai-panel {
+            width: 400px;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 10px 10px 10px 0;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-controls {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-response {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 10px 10px;
+        }
+
+        .chat-section {
+            height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 0 10px 10px 10px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+
+        .chat-input-area {
+            padding: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-custom {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .form-control-custom {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .form-control-custom::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-control-custom:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffd700;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+        }
+
+        .user-list {
+            display: flex;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .user-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .xampp-info {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .performance-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .stat-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
         }
-        
-        .status-dot {
+
+        .sync-indicator {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             background: #28a745;
             animation: pulse 2s infinite;
         }
-        
-        .status-dot.error {
-            background: #dc3545;
-        }
-        
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 0;
-            height: 650px;
-        }
-        
-        .panel {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .panel:not(:last-child) {
-            border-right: 2px solid #e0e0e0;
-        }
-        
-        .panel-header {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-        }
-        
-        .CodeMirror {
-            height: 585px !important;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .users-section {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            flex-shrink: 0;
-        }
-        
-        .users-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        
-        .user-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        
-        .user-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #fafafa;
-        }
-        
-        .ai-messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #f0f4ff;
-        }
-        
-        .message {
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .ai-message {
-            margin-bottom: 12px;
-            padding: 12px 15px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid #9c27b0;
-        }
-        
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        
-        .message-user {
-            font-weight: 600;
-            color: #4facfe;
-            font-size: 13px;
-        }
-        
-        .message-time {
-            font-size: 11px;
-            color: #999;
-        }
-        
-        .message-content {
-            color: #333;
-            line-height: 1.4;
-            font-size: 13px;
-        }
-        
-        .input-area {
-            border-top: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            background: white;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .ai-controls {
-            border-top: 1px solid #e0e0e0;
-            padding: 15px;
-            background: white;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        
-        .input-area input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 15px;
-            outline: none;
-            font-size: 13px;
-        }
-        
-        .input-area input:focus {
-            border-color: #4facfe;
-            box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
-        }
-        
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-        }
-        
-        .btn-ai {
-            background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
-            color: white;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-        }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-        
-        .controls {
-            background: #f8f9fa;
-            padding: 15px 30px;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .control-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #9c27b0;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .info-bar {
-            background: #fff3cd;
-            color: #856404;
-            padding: 10px 15px;
-            border-radius: 6px;
-            border: 1px solid #ffeaa7;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        
-        .success-bar {
-            background: #d4edda;
-            color: #155724;
-            padding: 10px 15px;
-            border-radius: 6px;
-            border: 1px solid #c3e6cb;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 Python協作教學平台</h1>
-            <div class="subtitle">XAMPP + PHP後端 + AI助教完整版</div>
-        </div>
-        
-        <div class="status-bar">
-            <div class="status-item">
-                <span class="status-dot" id="backend-status"></span>
-                <span id="backend-text">檢查PHP後端...</span>
-            </div>
-            <div class="status-item">
-                <span class="status-dot" id="ai-status"></span>
-                <span id="ai-text">檢查AI服務...</span>
-            </div>
-            <div class="status-item">
-                <span id="room-info">房間: demo-room</span>
-            </div>
-        </div>
-        
-        <div id="info-message" class="info-bar">
-            🤖 <strong>AI助教已整合PHP後端</strong>: 支援程式碼解釋、錯誤檢查、改進建議！開啟多個標籤頁體驗協作功能。
-        </div>
-        
-        <div class="main-content">
-            <!-- 程式碼編輯器 -->
-            <div class="panel">
-                <div class="panel-header">🐍 Python協作編輯器</div>
-                <textarea id="code-editor" placeholder="開始編寫您的Python程式碼..."></textarea>
-            </div>
-            
-            <!-- 聊天面板 -->
-            <div class="panel">
-                <div class="users-section">
-                    <div class="users-title">👥 在線用戶 (<span id="user-count">1</span>)</div>
-                    <div class="user-list" id="user-list">
-                        <div class="user-badge">用戶1 (您)</div>
-                    </div>
-                </div>
-                
-                <div class="panel-header">💬 即時聊天</div>
-                
-                <div class="messages-area" id="chat-messages">
-                    <div class="message">
-                        <div class="message-header">
-                            <span class="message-user">💡 系統提示</span>
-                            <span class="message-time">剛才</span>
-                        </div>
-                        <div class="message-content">歡迎使用XAMPP版協作平台！AI助教使用PHP後端處理，更穩定快速。</div>
-                    </div>
-                </div>
-                
-                <div class="input-area">
-                    <input type="text" id="chat-input" placeholder="輸入訊息..." maxlength="200">
-                    <button class="btn btn-primary" onclick="sendMessage()">發送</button>
-                </div>
-            </div>
-            
-            <!-- AI助教面板 -->
-            <div class="panel">
-                <div class="panel-header">🤖 AI助教 (PHP後端)</div>
-                
-                <div class="ai-messages-area" id="ai-messages">
-                    <div class="ai-message">
-                        <div class="message-header">
-                            <span class="message-user">🤖 AI助教</span>
-                            <span class="message-time">剛才</span>
-                        </div>
-                        <div class="message-content">我是您的Python程式設計助教！透過PHP後端處理，提供：<br>
-                        📝 程式碼解釋<br>
-                        🐛 錯誤檢查<br>
-                        💡 改進建議<br>
-                        🤝 協作指導<br><br>
-                        請使用下方按鈕開始！</div>
-                    </div>
-                </div>
-                
-                <div class="ai-controls">
-                    <button class="btn btn-ai" onclick="askAI('explain')">📝 解釋程式碼</button>
-                    <button class="btn btn-ai" onclick="askAI('bugs')">🐛 檢查錯誤</button>
-                    <button class="btn btn-ai" onclick="askAI('improve')">💡 改進建議</button>
-                    <button class="btn btn-ai" onclick="askAI('help')">🤝 協作指導</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <div class="control-group">
-                <label><strong>房間:</strong></label>
-                <input type="text" id="room-name" value="demo-room" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px;">
-                <button class="btn btn-primary" onclick="joinRoom()">加入房間</button>
-            </div>
-            
-            <div class="control-group">
-                <button class="btn btn-success" onclick="simulateCollaboration()">模擬協作</button>
-                <button class="btn btn-success" onclick="exportCode()">導出代碼</button>
-                <button class="btn btn-success" onclick="clearCode()">清空代碼</button>
-            </div>
-            
-            <div class="control-group">
-                <a href="php_test.php" class="btn btn-primary">🧪 PHP測試</a>
-                <a href="setup_database.php" class="btn btn-success">🗄️ 資料庫設置</a>
+    <!-- 頂部控制欄 -->
+    <div class="header">
+        <div class="logo">🏠 XAMPP本地版 - Python協作教學平台</div>
+        <div class="connection-controls">
+            <input type="text" id="roomInput" class="form-control form-control-sm form-control-custom" 
+                   placeholder="房間號" value="xampp_room" style="width: 120px;">
+            <input type="text" id="userNameInput" class="form-control form-control-sm form-control-custom" 
+                   placeholder="用戶名" style="width: 120px;">
+            <button id="connectBtn" class="btn btn-sm btn-custom">連接</button>
+            <div class="d-flex align-items-center">
+                <div id="statusIndicator" class="status-indicator"></div>
+                <span id="statusText">未連接</span>
             </div>
         </div>
     </div>
 
+    <!-- 主要內容區域 -->
+    <div class="main-container">
+        <!-- 代碼編輯區域 -->
+        <div class="code-section">
+            <div class="section-header">
+                <div>
+                    <strong>📝 Python代碼編輯器</strong>
+                    <span class="user-list" id="activeUsers"></span>
+                </div>
+                <div class="performance-stats">
+                    <div class="stat-item">
+                        <div class="sync-indicator"></div>
+                        <span>XAMPP本地同步</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>延遲: <span id="latencyDisplay">--</span>ms</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>版本: <span id="versionDisplay">1</span></span>
+                    </div>
+                </div>
+            </div>
+            <textarea id="codeEditor"></textarea>
+        </div>
+
+        <!-- AI助教面板 -->
+        <div class="ai-panel">
+            <div class="section-header">
+                <strong>🤖 AI助教 (XAMPP版)</strong>
+            </div>
+            
+            <div class="xampp-info">
+                <strong>🏠 XAMPP本地模式</strong><br>
+                • 使用本地MySQL數據庫<br>
+                • WebSocket服務器: ws://127.0.0.1:8080<br>
+                • 支援離線AI助教功能
+            </div>
+
+            <div class="ai-controls">
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <button class="btn btn-custom btn-sm w-100" onclick="callAI('explain')">
+                            📖 解釋程式碼
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-custom btn-sm w-100" onclick="callAI('bugs')">
+                            🐛 檢查錯誤
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-custom btn-sm w-100" onclick="callAI('improve')">
+                            ⚡ 改進建議
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-custom btn-sm w-100" onclick="callAI('help')">
+                            🎓 協作指導
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="input-group input-group-sm">
+                    <input type="text" id="aiQuestion" class="form-control form-control-custom" 
+                           placeholder="輸入Python問題...">
+                    <button class="btn btn-custom" onclick="callAI('general')">
+                        🚀 提問
+                    </button>
+                </div>
+            </div>
+
+            <div class="ai-response" id="aiResponse">
+                <div style="color: rgba(255,255,255,0.7); text-align: center; padding: 20px;">
+                    🤖 AI助教準備就緒<br>
+                    <small>選擇上方功能或輸入問題開始互動</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 聊天區域 -->
+    <div class="chat-section">
+        <div class="section-header">
+            <strong>💬 協作聊天</strong>
+            <small>與其他學習者即時交流</small>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" class="form-control form-control-sm form-control-custom" 
+                   placeholder="輸入聊天消息..." onkeypress="handleChatKeyPress(event)">
+            <button class="btn btn-custom btn-sm" onclick="sendChatMessage()">發送</button>
+        </div>
+    </div>
+
+    <!-- JavaScript 庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         // 全局變量
         let editor;
-        let currentRoom = 'demo-room';
-        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        let userName = '用戶' + Math.floor(Math.random() * 999 + 1);
-        let currentVersion = 0;
-        let lastSyncTime = Date.now();
-        
-        // BroadcastChannel用於多標籤頁通信
-        const channel = new BroadcastChannel('python_collab_xampp');
-        
-        // 初始化
-        document.addEventListener('DOMContentLoaded', async function() {
-            initEditor();
-            await checkBackendStatus();
-            await updateUserList();
-            await loadChatMessages(); // 載入聊天歷史
-            
-            // 歡迎消息
-            setTimeout(() => {
-                addChatMessage('AI助教', '🎉 歡迎使用XAMPP版Python協作教學平台！PHP後端已就緒，AI功能正常運行。嘗試發送消息測試聊天功能！', Date.now());
-            }, 1500);
-            
-            // 定期更新狀態
-            setInterval(updateUserList, 10000);
-            setInterval(checkBackendStatus, 30000);
-            setInterval(loadChatMessages, 15000); // 定期載入新消息
-        });
-        
-        // 初始化CodeMirror編輯器
+        let ws = null;
+        let isConnected = false;
+        let currentRoom = '';
+        let currentUserId = '';
+        let currentUserName = '';
+        let lastCodeHash = '';
+        let latencyStart = 0;
+
+        // 初始化代碼編輯器
         function initEditor() {
-            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
                 mode: 'python',
                 theme: 'monokai',
                 lineNumbers: true,
                 autoCloseBrackets: true,
                 matchBrackets: true,
                 indentUnit: 4,
-                lineWrapping: true,
-                extraKeys: {
-                    "Tab": function(cm) {
-                        cm.replaceSelection("    ", "end");
-                    }
-                }
+                tabSize: 4,
+                lineWrapping: true
             });
-            
-            // 初始代碼
-            const initialCode = `# 🐍 Python協作教學平台 - XAMPP + PHP後端版
-# 歡迎使用完整的後端整合協作編程環境！
+
+            // 設置初始代碼
+            editor.setValue(`# 🏠 XAMPP本地版 - Python協作教學平台
+# 歡迎使用本地WebSocket實時協作環境！
 
 def fibonacci_sequence(n):
-    """
-    生成斐波那契數列
+    '''
+    生成斐波那契數列 - XAMPP本地版示例
     
     參數:
         n (int): 要生成的數列長度
     
     返回:
         list: 斐波那契數列
-    """
+    '''
     if n <= 0:
         return []
     elif n == 1:
@@ -498,7 +385,7 @@ def fibonacci_sequence(n):
     return sequence
 
 def analyze_sequence(sequence):
-    """分析數列的特性"""
+    '''分析數列的特性'''
     if not sequence:
         return "數列為空"
     
@@ -518,9 +405,9 @@ def analyze_sequence(sequence):
         'max': max_num
     }
 
-# 主程式
+# 主程式 - XAMPP本地測試
 if __name__ == "__main__":
-    print("🔥 XAMPP協作編程示例：斐波那契數列分析")
+    print("🏠 XAMPP本地協作編程示例：斐波那契數列分析")
     
     # 生成前15個斐波那契數
     fib_sequence = fibonacci_sequence(15)
@@ -530,631 +417,328 @@ if __name__ == "__main__":
     analysis = analyze_sequence(fib_sequence)
     print("\\n📊 數列分析完成！")
     
-    # 💡 試試看：
-    # 1. 點擊"解釋程式碼"讓AI助教說明這個程式
-    # 2. 點擊"檢查錯誤"讓AI檢查程式是否有問題
-    # 3. 點擊"改進建議"獲得程式碼優化建議
-    # 4. 開啟多個標籤頁體驗即時協作功能！`;
-            
-            editor.setValue(initialCode);
-            
-            // 監聽編輯器變化
+    # 💡 XAMPP本地版特色：
+    # 1. 本地MySQL數據庫存儲
+    # 2. WebSocket實時同步 (ws://127.0.0.1:8080)
+    # 3. 離線AI助教功能
+    # 4. 完全本地化，無需網路連接
+    # 5. 適合教學演示和開發測試`);
+
+            // 監聽代碼變更
             editor.on('change', function(cm, change) {
-                if (change.origin !== 'sync') {
-                    debounce(syncCode, 200)();
+                if (isConnected && change.origin !== 'setValue') {
+                    const code = cm.getValue();
+                    const codeHash = getCodeHash(code);
+                    
+                    if (codeHash !== lastCodeHash) {
+                        lastCodeHash = codeHash;
+                        sendCodeChange(code);
+                    }
                 }
             });
-            
-            // 載入房間代碼
-            loadRoomCode();
         }
-        
-        // 檢查後端狀態
-        async function checkBackendStatus() {
+
+        // 生成代碼哈希
+        function getCodeHash(code) {
+            let hash = 0;
+            for (let i = 0; i < code.length; i++) {
+                const char = code.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash;
+        }
+
+        // 連接WebSocket
+        function connectWebSocket() {
+            const room = document.getElementById('roomInput').value || 'xampp_room';
+            const userName = document.getElementById('userNameInput').value || 'XAMPP用戶' + Math.floor(Math.random() * 1000);
+            
+            if (!userName.trim()) {
+                alert('請輸入用戶名');
+                return;
+            }
+
+            // XAMPP本地WebSocket地址
+            const wsUrl = 'ws://127.0.0.1:8080';
+            
             try {
-                // 檢查PHP後端
-                const response = await fetch('config.php');
-                if (response.ok) {
-                    document.getElementById('backend-status').className = 'status-dot';
-                    document.getElementById('backend-text').textContent = 'PHP後端正常';
-                } else {
-                    throw new Error('PHP後端無回應');
-                }
-                
-                // 檢查AI API
-                const aiResponse = await fetch('ai_api_handler.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'general',
-                        code: 'print("測試")',
-                        custom_prompt: '簡單回答：AI服務是否正常？'
-                    })
-                });
-                
-                if (aiResponse.ok) {
-                    const aiData = await aiResponse.json();
-                    if (aiData.success) {
-                        document.getElementById('ai-status').className = 'status-dot';
-                        document.getElementById('ai-text').textContent = 'AI服務正常';
-                        showSuccessMessage('✅ XAMPP + PHP後端 + AI服務全部正常運行！');
-                    } else {
-                        throw new Error(aiData.error || 'AI服務錯誤');
-                    }
-                } else {
-                    throw new Error('AI API無回應');
-                }
-                
-            } catch (error) {
-                console.error('後端檢查失敗:', error);
-                document.getElementById('backend-status').className = 'status-dot error';
-                document.getElementById('backend-text').textContent = 'PHP後端異常';
-                document.getElementById('ai-status').className = 'status-dot error';
-                document.getElementById('ai-text').textContent = 'AI服務異常';
-                showErrorMessage('❌ 後端服務異常，請檢查XAMPP是否正常運行');
-            }
-        }
-        
-        // 防抖函數
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
+                ws = new WebSocket(wsUrl);
+                currentRoom = room;
+                currentUserName = userName;
+                currentUserId = 'xampp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+                ws.onopen = function() {
+                    console.log('🏠 XAMPP WebSocket連接成功');
+                    isConnected = true;
+                    updateConnectionStatus(true);
+                    
+                    // 加入房間
+                    ws.send(JSON.stringify({
+                        type: 'join_room',
+                        room: currentRoom,
+                        userId: currentUserId,
+                        userName: currentUserName
+                    }));
                 };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-        
-        // 同步代碼
-        function syncCode() {
-            const code = editor.getValue();
-            const now = Date.now();
-            
-            currentVersion++;
-            
-            const syncData = {
-                type: 'code_sync',
-                room: currentRoom,
-                code: code,
-                version: currentVersion,
-                userId: userId,
-                userName: userName,
-                timestamp: now
-            };
-            
-            // 保存到localStorage
-            localStorage.setItem(`room_${currentRoom}_code`, JSON.stringify(syncData));
-            
-            // 廣播到其他標籤頁
-            channel.postMessage(syncData);
-            
-            console.log(`📤 代碼同步: 版本 ${currentVersion}`);
-        }
-        
-        // 載入房間代碼
-        function loadRoomCode() {
-            const savedData = localStorage.getItem(`room_${currentRoom}_code`);
-            if (savedData) {
-                try {
-                    const data = JSON.parse(savedData);
-                    if (data.code && data.code !== editor.getValue()) {
-                        editor.setValue(data.code);
-                        currentVersion = data.version || 0;
-                        console.log(`📥 載入房間代碼: 版本 ${currentVersion}`);
+
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleWebSocketMessage(data);
+                    } catch (e) {
+                        console.error('解析WebSocket消息失敗:', e);
                     }
-                } catch (e) {
-                    console.error('載入房間代碼失敗:', e);
-                }
+                };
+
+                ws.onclose = function() {
+                    console.log('🏠 XAMPP WebSocket連接關閉');
+                    isConnected = false;
+                    updateConnectionStatus(false);
+                };
+
+                ws.onerror = function(error) {
+                    console.error('🏠 XAMPP WebSocket錯誤:', error);
+                    alert('WebSocket連接失敗，請確認:\n1. XAMPP WebSocket服務器是否啟動\n2. 端口8080是否可用\n3. 防火牆設置');
+                };
+
+            } catch (error) {
+                console.error('創建WebSocket連接失敗:', error);
+                alert('無法創建WebSocket連接');
             }
         }
-        
-        // 處理來自其他標籤頁的消息
-        channel.onmessage = function(event) {
-            const data = event.data;
-            
+
+        // 處理WebSocket消息
+        function handleWebSocketMessage(data) {
             switch (data.type) {
                 case 'code_sync':
-                    if (data.room === currentRoom && data.userId !== userId) {
-                        if (data.version > currentVersion) {
-                            editor.setValue(data.code);
-                            currentVersion = data.version;
-                            console.log(`📥 接收代碼同步: 版本 ${currentVersion} from ${data.userName}`);
+                case 'code_change':
+                    if (data.userId !== currentUserId) {
+                        const code = data.data.code;
+                        const codeHash = getCodeHash(code);
+                        
+                        if (codeHash !== lastCodeHash) {
+                            lastCodeHash = codeHash;
+                            editor.setValue(code);
+                        }
+                        
+                        if (data.data.version) {
+                            document.getElementById('versionDisplay').textContent = data.data.version;
                         }
                     }
-                    break;
                     
+                    // 計算延遲
+                    if (latencyStart > 0) {
+                        const latency = Date.now() - latencyStart;
+                        document.getElementById('latencyDisplay').textContent = latency;
+                        latencyStart = 0;
+                    }
+                    break;
+
+                case 'room_users':
+                    updateActiveUsers(data.data);
+                    break;
+
                 case 'chat_message':
-                    if (data.room === currentRoom && data.userId !== userId) {
-                        addChatMessage(data.userName, data.message, data.timestamp);
+                    if (data.userId !== currentUserId) {
+                        addChatMessage(data.userName, data.data.message, false);
                     }
                     break;
-                    
-                case 'ai_response':
-                    if (data.room === currentRoom && data.userId !== userId) {
-                        addAIMessage(data.response, data.action);
+
+                case 'user_joined':
+                    if (data.userId !== currentUserId) {
+                        addChatMessage('系統', `${data.userName} 加入了房間`, true);
                     }
+                    break;
+
+                case 'user_left':
+                    if (data.userId !== currentUserId) {
+                        addChatMessage('系統', `${data.userName} 離開了房間`, true);
+                    }
+                    break;
+
+                case 'error':
+                    console.error('服務器錯誤:', data.message);
                     break;
             }
-        };
-        
-        // AI助教功能 - 使用PHP後端
-        async function askAI(action) {
-            const code = editor.getValue();
-            const buttons = document.querySelectorAll('.btn-ai');
+        }
+
+        // 發送代碼變更
+        function sendCodeChange(code) {
+            if (ws && isConnected) {
+                latencyStart = Date.now();
+                ws.send(JSON.stringify({
+                    type: 'code_change',
+                    room: currentRoom,
+                    userId: currentUserId,
+                    userName: currentUserName,
+                    data: {
+                        code: code
+                    }
+                }));
+            }
+        }
+
+        // 發送聊天消息
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
             
-            // 禁用按鈕並顯示加載狀態
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                if (btn.onclick.toString().includes(action)) {
-                    btn.innerHTML = `<span class="loading"></span> 處理中...`;
+            if (!message || !isConnected) return;
+
+            ws.send(JSON.stringify({
+                type: 'chat_message',
+                room: currentRoom,
+                userId: currentUserId,
+                userName: currentUserName,
+                data: {
+                    message: message
                 }
+            }));
+
+            addChatMessage(currentUserName, message, false, true);
+            input.value = '';
+        }
+
+        // 添加聊天消息到界面
+        function addChatMessage(userName, message, isSystem = false, isSelf = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.style.marginBottom = '5px';
+            messageDiv.style.padding = '5px';
+            messageDiv.style.borderRadius = '5px';
+            
+            if (isSystem) {
+                messageDiv.style.background = 'rgba(255, 193, 7, 0.2)';
+                messageDiv.style.fontStyle = 'italic';
+                messageDiv.innerHTML = `<small>${message}</small>`;
+            } else if (isSelf) {
+                messageDiv.style.background = 'rgba(0, 123, 255, 0.2)';
+                messageDiv.innerHTML = `<strong>我:</strong> ${message}`;
+            } else {
+                messageDiv.style.background = 'rgba(255, 255, 255, 0.1)';
+                messageDiv.innerHTML = `<strong>${userName}:</strong> ${message}`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 處理聊天輸入框按鍵
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // 更新連接狀態
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            const connectBtn = document.getElementById('connectBtn');
+            
+            if (connected) {
+                indicator.classList.add('connected');
+                text.textContent = `已連接 (${currentRoom})`;
+                connectBtn.textContent = '斷開';
+                connectBtn.onclick = disconnectWebSocket;
+            } else {
+                indicator.classList.remove('connected');
+                text.textContent = '未連接';
+                connectBtn.textContent = '連接';
+                connectBtn.onclick = connectWebSocket;
+            }
+        }
+
+        // 斷開WebSocket連接
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+            }
+            isConnected = false;
+            updateConnectionStatus(false);
+        }
+
+        // 更新活躍用戶列表
+        function updateActiveUsers(users) {
+            const activeUsers = document.getElementById('activeUsers');
+            activeUsers.innerHTML = '';
+            
+            users.forEach(user => {
+                const badge = document.createElement('span');
+                badge.className = 'user-badge';
+                badge.textContent = user.userName;
+                if (user.userId === currentUserId) {
+                    badge.style.background = 'rgba(0, 123, 255, 0.3)';
+                }
+                activeUsers.appendChild(badge);
             });
+        }
+
+        // AI助教功能
+        async function callAI(action) {
+            const code = editor.getValue();
+            const question = document.getElementById('aiQuestion').value;
+            const responseDiv = document.getElementById('aiResponse');
+            
+            // 顯示載入狀態
+            responseDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner-border spinner-border-sm" role="status"></div><br><small>AI助教思考中...</small></div>';
             
             try {
                 const response = await fetch('ai_api_handler.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         action: action,
-                        code: code
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP錯誤: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    addAIMessage(result.response, action);
-                    
-                    // 廣播AI回應給其他用戶
-                    channel.postMessage({
-                        type: 'ai_response',
-                        room: currentRoom,
-                        userId: userId,
-                        userName: userName,
-                        response: result.response,
-                        action: action,
-                        timestamp: Date.now()
-                    });
-                } else {
-                    throw new Error(result.error || '未知錯誤');
-                }
-                
-            } catch (error) {
-                console.error('AI請求失敗:', error);
-                addAIMessage(`抱歉，AI助教暫時無法回應：${error.message}。請檢查網路連接和PHP後端狀態。`, action);
-            } finally {
-                // 恢復按鈕狀態
-                buttons.forEach(btn => {
-                    btn.disabled = false;
-                });
-                
-                // 恢復按鈕文字
-                const buttonTexts = {
-                    'explain': '📝 解釋程式碼',
-                    'bugs': '🐛 檢查錯誤',
-                    'improve': '💡 改進建議',
-                    'help': '🤝 協作指導'
-                };
-                
-                buttons.forEach(btn => {
-                    Object.keys(buttonTexts).forEach(key => {
-                        if (btn.onclick.toString().includes(key)) {
-                            btn.innerHTML = buttonTexts[key];
-                        }
-                    });
-                });
-            }
-        }
-        
-        // 發送聊天消息
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            
-            if (message) {
-                try {
-                    // 先添加到本地UI
-                    addChatMessage(userName + ' (您)', message, Date.now());
-                    input.value = '';
-                    
-                    // 發送到PHP後端
-                    const response = await fetch('chat_api_handler.php?action=send', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            action: 'send',
-                            room: currentRoom,
-                            userId: userId,
-                            userName: userName,
-                            message: message,
-                            messageType: 'user'
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        console.log('✅ 消息已發送到後端:', result);
-                        // 同時使用 BroadcastChannel 進行本地同步
-                        const chatData = {
-                            type: 'chat_message',
-                            room: currentRoom,
-                            userId: userId,
-                            userName: userName,
-                            message: message,
-                            timestamp: Date.now()
-                        };
-                        channel.postMessage(chatData);
-                    } else {
-                        throw new Error(result.error || '發送失敗');
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ 發送消息失敗:', error);
-                    showErrorMessage('發送消息失敗: ' + error.message);
-                }
-            }
-        }
-        
-        // 載入房間聊天消息
-        async function loadChatMessages() {
-            try {
-                const response = await fetch(`chat_api_handler.php?action=get&room=${currentRoom}&limit=20`);
-                const result = await response.json();
-                
-                if (result.success && result.data.length > 0) {
-                    const messagesContainer = document.getElementById('chat-messages');
-                    messagesContainer.innerHTML = ''; // 清空現有消息
-                    
-                    result.data.forEach(msg => {
-                        addChatMessage(
-                            msg.user_name || '未知用戶',
-                            msg.message,
-                            msg.timestamp * 1000 // 轉換為毫秒
-                        );
-                    });
-                    console.log(`✅ 載入了 ${result.data.length} 條歷史消息`);
-                }
-            } catch (error) {
-                console.error('❌ 載入聊天消息失敗:', error);
-            }
-        }
-        
-        // 保存代碼到後端
-        async function saveCode() {
-            const code = editor.getValue();
-            
-            try {
-                const response = await fetch('code_sync_handler.php?action=save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'save',
-                        room: currentRoom,
                         code: code,
-                        userId: userId
+                        question: question
                     })
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    console.log('✅ 代碼已保存到資料庫:', result);
-                    showSuccessMessage('代碼已自動保存到資料庫 ✨');
-                    currentVersion = result.data.version;
+                    responseDiv.innerHTML = `
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <strong>🤖 AI助教回應 (XAMPP本地版)</strong>
+                        </div>
+                        <div style="line-height: 1.6;">${result.response}</div>
+                    `;
                 } else {
-                    throw new Error(result.error || '保存失敗');
+                    responseDiv.innerHTML = `
+                        <div style="color: #ff6b6b; padding: 15px;">
+                            ❌ AI助教暫時無法回應<br>
+                            <small>${result.error || '請稍後再試'}</small>
+                        </div>
+                    `;
                 }
-                
             } catch (error) {
-                console.error('❌ 保存代碼失敗:', error);
-                showErrorMessage('保存代碼失敗: ' + error.message);
+                console.error('AI API調用失敗:', error);
+                responseDiv.innerHTML = `
+                    <div style="color: #ff6b6b; padding: 15px;">
+                        ❌ 網絡錯誤<br>
+                        <small>請檢查XAMPP服務器是否正常運行</small>
+                    </div>
+                `;
             }
-        }
-        
-        // 載入房間代碼
-        async function loadRoomCode() {
-            try {
-                const response = await fetch(`code_sync_handler.php?action=load&room=${currentRoom}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    const codeData = result.data;
-                    editor.setValue(codeData.code_content);
-                    currentVersion = codeData.version;
-                    
-                    console.log(`✅ 載入房間代碼 - 房間: ${currentRoom}, 版本: ${currentVersion}`);
-                    
-                    if (codeData.is_default) {
-                        addChatMessage('系統', '🆕 這是新房間，已載入預設代碼模板', Date.now());
-                    } else {
-                        addChatMessage('系統', `📂 已載入房間代碼 (版本 ${currentVersion})`, Date.now());
-                    }
-                } else {
-                    throw new Error(result.error || '載入失敗');
-                }
-                
-            } catch (error) {
-                console.error('❌ 載入房間代碼失敗:', error);
-                showErrorMessage('載入房間代碼失敗: ' + error.message);
-            }
-        }
-        
-        // 同步代碼（防抖處理）
-        const syncCode = debounce(async function() {
-            await saveCode();
-        }, 3000); // 3秒防抖
-        
-        // 更新用戶列表（使用後端API）
-        async function updateUserList() {
-            try {
-                const response = await fetch(`chat_api_handler.php?action=users&room=${currentRoom}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    const userList = document.getElementById('user-list');
-                    const userCount = document.getElementById('user-count');
-                    
-                    const users = result.data;
-                    
-                    userList.innerHTML = users.map(user => {
-                        const statusIcon = user.status === 'online' ? '🟢' : user.status === 'away' ? '🟡' : '🔴';
-                        return `<div class="user-badge">${statusIcon} ${user.name}</div>`;
-                    }).join('');
-                    
-                    userCount.textContent = users.length;
-                } else {
-                    throw new Error(result.error || '獲取用戶列表失敗');
-                }
-                
-            } catch (error) {
-                console.error('❌ 更新用戶列表失敗:', error);
-                // 降級到模擬數據
-                const userList = document.getElementById('user-list');
-                const userCount = document.getElementById('user-count');
-                
-                const simulatedUsers = [
-                    `${userName} (您)`,
-                    '張同學',
-                    '李同學', 
-                    '王老師'
-                ];
-                
-                const randomUserCount = Math.floor(Math.random() * (simulatedUsers.length - 1)) + 2;
-                const currentUsers = simulatedUsers.slice(0, randomUserCount);
-                
-                userList.innerHTML = currentUsers.map(user => 
-                    `<div class="user-badge">🟢 ${user}</div>`
-                ).join('');
-                
-                userCount.textContent = currentUsers.length;
-            }
-        }
-        
-        // 添加聊天消息
-        function addChatMessage(user, message, timestamp) {
-            const messagesContainer = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
             
-            const time = new Date(timestamp).toLocaleTimeString('zh-TW', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            messageDiv.innerHTML = `
-                <div class="message-header">
-                    <span class="message-user">${escapeHtml(user)}</span>
-                    <span class="message-time">${time}</span>
-                </div>
-                <div class="message-content">${escapeHtml(message)}</div>
-            `;
-            
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // 清空問題輸入框
+            document.getElementById('aiQuestion').value = '';
         }
-        
-        // 添加AI消息
-        function addAIMessage(response, action = 'general') {
-            const messagesContainer = document.getElementById('ai-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'ai-message';
-            
-            const time = new Date().toLocaleTimeString('zh-TW', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            const actionEmoji = {
-                'explain': '📝',
-                'bugs': '🐛',
-                'improve': '💡',
-                'help': '🤝',
-                'general': '🤖'
-            };
-            
-            messageDiv.innerHTML = `
-                <div class="message-header">
-                    <span class="message-user">${actionEmoji[action] || '🤖'} AI助教</span>
-                    <span class="message-time">${time}</span>
-                </div>
-                <div class="message-content">${response.replace(/\n/g, '<br>')}</div>
-            `;
-            
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        // HTML轉義
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // 顯示成功消息
-        function showSuccessMessage(message) {
-            const infoMessage = document.getElementById('info-message');
-            infoMessage.className = 'success-bar';
-            infoMessage.innerHTML = message;
-        }
-        
-        // 顯示錯誤消息
-        function showErrorMessage(message) {
-            const infoMessage = document.getElementById('info-message');
-            infoMessage.className = 'info-bar';
-            infoMessage.innerHTML = message;
-        }
-        
-        // 加入房間
-        async function joinRoom() {
-            const newRoom = document.getElementById('room-name').value.trim() || 'demo-room';
-            if (newRoom !== currentRoom) {
-                const oldRoom = currentRoom;
-                currentRoom = newRoom;
-                currentVersion = 0;
-                
-                document.getElementById('room-info').textContent = `房間: ${currentRoom}`;
-                document.getElementById('chat-messages').innerHTML = '';
-                
-                try {
-                    // 載入房間代碼和聊天記錄
-                    await loadRoomCode();
-                    await loadChatMessages();
-                    await updateUserList();
-                    
-                    addChatMessage('系統', `✅ 成功加入房間: ${currentRoom}`, Date.now());
-                    showSuccessMessage(`已加入房間 ${currentRoom}，代碼和聊天記錄已載入`);
-                    
-                } catch (error) {
-                    console.error('❌ 加入房間失敗:', error);
-                    showErrorMessage('加入房間失敗: ' + error.message);
-                    // 回復到原房間
-                    currentRoom = oldRoom;
-                    document.getElementById('room-info').textContent = `房間: ${currentRoom}`;
-                }
-                
-                console.log(`🏠 加入房間: ${currentRoom}`);
-            }
-        }
-        
-        // 模擬協作編輯
-        async function simulateCollaboration() {
-            const collaborationCode = `
-# 🤖 協作夥伴添加的程式碼 (通過PHP後端同步)
-def collaborative_example():
-    """這是協作夥伴貢獻的函數"""
-    print("XAMPP + PHP讓協作更穩定！")
-    
-    # 後端協作的優勢
-    advantages = [
-        "資料庫持久化",
-        "伺服器端處理", 
-        "更好的安全性",
-        "穩定的AI整合"
-    ]
-    
-    for advantage in advantages:
-        print(f"✨ {advantage}")
-    
-    return "PHP後端協作成功！"
 
-# 測試XAMPP協作功能
-print(collaborative_example())
-`;
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initEditor();
             
-            const currentCode = editor.getValue();
-            const newCode = currentCode + collaborationCode;
-            editor.setValue(newCode);
+            // 設置連接按鈕事件
+            document.getElementById('connectBtn').onclick = connectWebSocket;
             
-            // 保存到後端
-            try {
-                await saveCode();
-                
-                // 發送協作消息到聊天
-                const response = await fetch('chat_api_handler.php?action=send', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'send',
-                        room: currentRoom,
-                        userId: 'bot_collab',
-                        userName: '協作夥伴',
-                        message: '我剛剛添加了一些XAMPP協作示例代碼，展示PHP後端的優勢！代碼已自動保存到資料庫。',
-                        messageType: 'user'
-                    })
-                });
-                
-                if (response.ok) {
-                    addChatMessage('協作夥伴', '我剛剛添加了一些XAMPP協作示例代碼，展示PHP後端的優勢！代碼已自動保存到資料庫。', Date.now());
-                    showSuccessMessage('協作代碼已添加並保存到資料庫！');
-                } else {
-                    throw new Error('發送協作消息失敗');
-                }
-                
-            } catch (error) {
-                console.error('❌ 協作功能失敗:', error);
-                showErrorMessage('協作功能失敗: ' + error.message);
-                addChatMessage('協作夥伴', '我剛剛添加了一些XAMPP協作示例代碼，展示PHP後端的優勢！', Date.now());
-            }
-        }
-        
-        // 導出代碼
-        function exportCode() {
-            const code = editor.getValue();
-            const blob = new Blob([code], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `python_xampp_collaboration_${currentRoom}_${new Date().toISOString().slice(0,16).replace('T', '_')}.py`;
-            a.click();
-            URL.revokeObjectURL(url);
+            // 自動生成用戶名
+            document.getElementById('userNameInput').value = 'XAMPP用戶' + Math.floor(Math.random() * 1000);
             
-            addChatMessage('系統', '程式碼已導出下載', Date.now());
-        }
-        
-        // 清空代碼
-        function clearCode() {
-            if (confirm('確定要清空所有程式碼嗎？')) {
-                editor.setValue('# 新的XAMPP協作開始...\n# 歡迎使用PHP後端協作平台！\n\n');
-                addChatMessage('系統', '程式碼已清空，重新開始協作', Date.now());
-            }
-        }
-        
-        // 聊天輸入框回車發送
-        document.getElementById('chat-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        
-        // 頁面關閉時清理
-        window.addEventListener('beforeunload', function() {
-            channel.postMessage({
-                type: 'user_left',
-                room: currentRoom,
-                userId: userId,
-                userName: userName
-            });
+            console.log('🏠 XAMPP本地版協作平台初始化完成');
         });
     </script>
 </body>

@@ -1,12 +1,12 @@
-#!/usr/local/bin/php
 <?php
 /**
- * Python協作教學平台 - WebSocket服務器 (Zeabur雲端版)
+ * 🏠 XAMPP本地版 - Python協作教學平台 WebSocket服務器
  * 
- * 支援Zeabur雲端部署和XAMPP本地部署
- * - 自動檢測環境並配置相應的端口和數據庫
- * - Zeabur環境：使用環境變量配置
- * - XAMPP環境：使用本地MySQL配置
+ * 專為XAMPP環境優化的WebSocket服務器
+ * - 使用本地MySQL數據庫 (localhost:3306, root用戶無密碼)
+ * - 監聽本地端口8080
+ * - 支援多人實時協作編程
+ * - 整合AI助教功能
  */
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -17,13 +17,12 @@ use Ratchet\WebSocket\WsServer;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 
-class CollaborationServer implements MessageComponentInterface {
+class XamppCollaborationServer implements MessageComponentInterface {
     protected $clients;
     protected $rooms;
     protected $codeStates;
     protected $versions;
     protected $pdo;
-    protected $isZeaburEnv;
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
@@ -31,11 +30,7 @@ class CollaborationServer implements MessageComponentInterface {
         $this->codeStates = [];
         $this->versions = [];
         
-        // 檢測運行環境
-        $this->isZeaburEnv = !empty(getenv('ZEABUR')) || !empty(getenv('DB_HOST'));
-        
-        echo "🚀 Python協作教學平台 WebSocket服務器啟動中...\n";
-        echo "🌍 運行環境: " . ($this->isZeaburEnv ? "Zeabur雲端" : "XAMPP本地") . "\n";
+        echo "🏠 XAMPP本地版 WebSocket服務器啟動中...\n";
         echo "📋 環境檢查:\n";
         echo "   PHP版本: " . phpversion() . "\n";
         echo "   時間: " . date('Y-m-d H:i:s') . "\n";
@@ -52,26 +47,14 @@ class CollaborationServer implements MessageComponentInterface {
 
     private function initDatabase() {
         try {
-            if ($this->isZeaburEnv) {
-                // Zeabur雲端環境配置
-                $host = getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: 'localhost';
-                $port = getenv('DB_PORT') ?: getenv('MYSQL_PORT') ?: '3306';
-                $dbname = getenv('DB_NAME') ?: getenv('MYSQL_DATABASE') ?: 'python_collaboration';
-                $username = getenv('DB_USER') ?: getenv('MYSQL_USERNAME') ?: 'root';
-                $password = getenv('DB_PASSWORD') ?: getenv('MYSQL_PASSWORD') ?: '';
-                
-                echo "☁️ Zeabur雲端MySQL連接參數:\n";
-            } else {
-                // XAMPP本地環境配置
-                $host = 'localhost';
-                $port = '3306';
-                $dbname = 'python_collaboration';
-                $username = 'root';
-                $password = '';
-                
-                echo "🏠 XAMPP本地MySQL連接參數:\n";
-            }
+            // XAMPP標準配置
+            $host = 'localhost';
+            $port = '3306';
+            $dbname = 'python_collaboration';
+            $username = 'root';
+            $password = '';  // XAMPP默認無密碼
             
+            echo "🔍 XAMPP MySQL連接參數:\n";
             echo "   主機: {$host}:{$port}\n";
             echo "   數據庫: {$dbname}\n";
             echo "   用戶: {$username}\n";
@@ -86,7 +69,7 @@ class CollaborationServer implements MessageComponentInterface {
             $result = $stmt->fetch();
             
             if ($result && $result['test'] == 1) {
-                echo "✅ MySQL連接成功\n";
+                echo "✅ XAMPP MySQL連接成功\n";
                 
                 // 檢查必要的表
                 $tables = ['rooms', 'room_code_snapshots', 'room_participants'];
@@ -102,21 +85,12 @@ class CollaborationServer implements MessageComponentInterface {
             }
             
         } catch (PDOException $e) {
-            echo "❌ MySQL連接失敗: " . $e->getMessage() . "\n";
+            echo "❌ XAMPP MySQL連接失敗: " . $e->getMessage() . "\n";
             echo "🔍 請檢查:\n";
-            if ($this->isZeaburEnv) {
-                echo "   1. Zeabur MySQL服務是否正常\n";
-                echo "   2. 環境變量是否正確設置\n";
-                echo "   3. 數據庫是否已初始化\n";
-            } else {
-                echo "   1. XAMPP MySQL服務是否啟動\n";
-                echo "   2. 數據庫 'python_collaboration' 是否存在\n";
-                echo "   3. 是否運行了初始化腳本\n";
-            }
-            // 在Zeabur環境中不要退出，讓容器繼續運行
-            if (!$this->isZeaburEnv) {
-                exit(1);
-            }
+            echo "   1. XAMPP MySQL服務是否啟動\n";
+            echo "   2. 數據庫 'python_collaboration' 是否存在\n";
+            echo "   3. 是否運行了初始化腳本\n";
+            exit(1);
         }
     }
 
@@ -194,19 +168,6 @@ class CollaborationServer implements MessageComponentInterface {
                     'version' => $this->versions[$roomCode] ?? 1
                 ]
             ]));
-        } else {
-            // 發送初始代碼
-            $initialCode = $this->getInitialCode();
-            $this->codeStates[$roomCode] = $initialCode;
-            $this->versions[$roomCode] = 1;
-            
-            $conn->send(json_encode([
-                'type' => 'code_sync',
-                'data' => [
-                    'code' => $initialCode,
-                    'version' => 1
-                ]
-            ]));
         }
 
         // 廣播用戶加入事件
@@ -251,20 +212,6 @@ class CollaborationServer implements MessageComponentInterface {
         ], $conn);
     }
 
-    protected function handleCursorChange(ConnectionInterface $conn, $data) {
-        $roomCode = $conn->room_code;
-        if (!$roomCode) return;
-
-        // 廣播游標變更給房間其他用戶
-        $this->broadcastToRoom($roomCode, [
-            'type' => 'cursor_change',
-            'userId' => $conn->user_id,
-            'userName' => $conn->user_name,
-            'data' => $data['data'],
-            'timestamp' => microtime(true) * 1000
-        ], $conn);
-    }
-
     protected function handleChatMessage(ConnectionInterface $conn, $data) {
         $roomCode = $conn->room_code;
         if (!$roomCode) return;
@@ -287,28 +234,6 @@ class CollaborationServer implements MessageComponentInterface {
         ]);
     }
 
-    protected function handleAIRequest(ConnectionInterface $conn, $data) {
-        // AI請求處理 - 可以在這裡整合AI服務
-        echo "🤖 AI請求: {$conn->user_name} 在 {$conn->room_code}\n";
-        
-        // 廣播AI請求給房間所有用戶
-        $this->broadcastToRoom($conn->room_code, [
-            'type' => 'ai_response',
-            'userId' => $conn->user_id,
-            'userName' => $conn->user_name,
-            'data' => [
-                'request' => $data['data'] ?? [],
-                'response' => '🤖 AI助教功能開發中...'
-            ],
-            'timestamp' => microtime(true) * 1000
-        ]);
-    }
-
-    protected function getInitialCode() {
-        $env = $this->isZeaburEnv ? "Zeabur雲端" : "XAMPP本地";
-        return "# 🚀 Python協作教學平台 - {$env}版\n# 歡迎使用WebSocket實時協作環境！\n\ndef fibonacci_sequence(n):\n    '''\n    生成斐波那契數列\n    \n    參數:\n        n (int): 要生成的數列長度\n    \n    返回:\n        list: 斐波那契數列\n    '''\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    elif n == 2:\n        return [0, 1]\n    \n    sequence = [0, 1]\n    for i in range(2, n):\n        next_num = sequence[i-1] + sequence[i-2]\n        sequence.append(next_num)\n    \n    return sequence\n\ndef analyze_sequence(sequence):\n    '''分析數列的特性'''\n    if not sequence:\n        return \"數列為空\"\n    \n    total = sum(sequence)\n    average = total / len(sequence)\n    max_num = max(sequence)\n    \n    print(f\"數列長度: {len(sequence)}\")\n    print(f\"總和: {total}\")\n    print(f\"平均值: {average:.2f}\")\n    print(f\"最大值: {max_num}\")\n    \n    return {\n        'length': len(sequence),\n        'sum': total,\n        'average': average,\n        'max': max_num\n    }\n\n# 主程式 - {$env}版\nif __name__ == \"__main__\":\n    print(\"🚀 {$env}協作編程示例：斐波那契數列分析\")\n    \n    # 生成前15個斐波那契數\n    fib_sequence = fibonacci_sequence(15)\n    print(f\"前15個斐波那契數: {fib_sequence}\")\n    \n    # 分析數列特性\n    analysis = analyze_sequence(fib_sequence)\n    print(\"\\n📊 數列分析完成！\")\n    \n    # 💡 試試看：\n    # 1. 點擊\\\"解釋程式碼\\\"讓AI助教說明這個程式\n    # 2. 點擊\\\"檢查錯誤\\\"讓AI檢查程式是否有問題  \n    # 3. 點擊\\\"改進建議\\\"獲得程式碼優化建議\n    # 4. 在聊天區域與同伴討論程式碼\n    # 5. 代碼會自動保存到MySQL數據庫！";
-    }
-
     protected function saveCodeSnapshot($roomCode, $code, $version, $userId, $userName) {
         try {
             if (!$this->pdo) return;
@@ -319,9 +244,8 @@ class CollaborationServer implements MessageComponentInterface {
             $room = $stmt->fetch();
 
             if (!$room) {
-                $env = $this->isZeaburEnv ? "Zeabur雲端" : "XAMPP本地";
                 $stmt = $this->pdo->prepare("INSERT INTO rooms (room_name, room_code, description) VALUES (?, ?, ?)");
-                $stmt->execute([$roomCode, $roomCode, "{$env}房間: {$roomCode}"]);
+                $stmt->execute([$roomCode, $roomCode, "XAMPP本地房間: {$roomCode}"]);
                 $roomId = $this->pdo->lastInsertId();
             } else {
                 $roomId = $room['id'];
@@ -396,21 +320,11 @@ class CollaborationServer implements MessageComponentInterface {
     }
 }
 
-// 啟動WebSocket服務器
-$isZeaburEnv = !empty(getenv('ZEABUR')) || !empty(getenv('DB_HOST'));
+// 啟動XAMPP WebSocket服務器
+$port = 8080;
+$host = '127.0.0.1';  // 僅本地訪問
 
-if ($isZeaburEnv) {
-    // Zeabur雲端環境 - 使用內部端口8080
-    $port = 8080;
-    $host = '0.0.0.0';  // 監聽所有接口
-    echo "☁️ 啟動Zeabur雲端WebSocket服務器...\n";
-} else {
-    // XAMPP本地環境
-    $port = 8080;
-    $host = '127.0.0.1';  // 僅本地訪問
-    echo "🏠 啟動XAMPP本地WebSocket服務器...\n";
-}
-
+echo "🚀 啟動XAMPP WebSocket服務器...\n";
 echo "📍 監聽地址: {$host}:{$port}\n";
 echo "🌐 WebSocket URL: ws://{$host}:{$port}\n";
 echo "⏰ 啟動時間: " . date('Y-m-d H:i:s') . "\n";
@@ -421,7 +335,7 @@ echo str_repeat("=", 50) . "\n";
 $server = IoServer::factory(
     new HttpServer(
         new WsServer(
-            new CollaborationServer()
+            new XamppCollaborationServer()
         )
     ),
     $port,
