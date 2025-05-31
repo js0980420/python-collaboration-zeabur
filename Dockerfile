@@ -24,9 +24,25 @@ WORKDIR /var/www/html
 # 複製應用程式文件
 COPY . /var/www/html/
 
-# 設置Apache配置
-RUN a2enmod rewrite
-COPY .htaccess /var/www/html/.htaccess
+# 配置Apache
+RUN a2enmod rewrite \
+    && a2enmod headers \
+    && a2enmod ssl
+
+# 創建Apache配置文件
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html\n\
+    ServerName localhost\n\
+    \n\
+    <Directory /var/www/html>\n\
+        Options Indexes FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    \n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 # 安裝PHP依賴（WebSocket服務器）
 WORKDIR /var/www/html/websocket_version
@@ -38,7 +54,10 @@ WORKDIR /var/www/html
 # 創建必要的目錄
 RUN mkdir -p /var/log/supervisor \
     && mkdir -p /etc/supervisor/conf.d \
-    && mkdir -p /var/run
+    && mkdir -p /var/run \
+    && mkdir -p /var/run/apache2 \
+    && mkdir -p /var/lock/apache2 \
+    && mkdir -p /var/log/apache2
 
 # 複製supervisor配置文件
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
